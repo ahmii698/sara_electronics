@@ -1,0 +1,656 @@
+.salary-container {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.salary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.salary-header h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0A1628;
+}
+
+.salary-search {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0 0.75rem;
+  margin-bottom: 1rem;
+  max-width: 300px;
+}
+
+.salary-search .search-icon {
+  color: #9ca3af;
+}
+
+.salary-search input {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.salary-table {
+  overflow-x: auto;
+}
+
+.salary-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.salary-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.salary-table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #1f2937;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.salary-table tr:hover td {
+  background: #f9fafb;
+}
+
+/* ===== BADGES ===== */
+.badge-active {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #d4edda;
+  color: #155724;
+}
+
+.badge-pending {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.advance-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.no-advance {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.action-group {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.action-group button {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4rem;
+  border: none;
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.btn-view {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.btn-view:hover {
+  background: #bae6fd;
+}
+
+.btn-edit {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.btn-edit:hover {
+  background: #fde68a;
+}
+
+.btn-advance {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.btn-advance:hover {
+  background: #f8bbd0;
+}
+
+.btn-pay {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.btn-pay:hover {
+  background: #a7f3d0;
+}
+
+.btn-reset {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-reset:hover {
+  background: #fca5a5;
+}
+
+/* ===== MODAL - HISTORY ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 1.25rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.history-modal {
+  max-width: 620px;
+}
+
+.edit-modal {
+  max-width: 420px;
+}
+
+.advance-modal {
+  max-width: 440px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0A1628;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* ===== HISTORY SUMMARY ===== */
+.history-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 0.75rem;
+}
+
+.summary-item {
+  text-align: center;
+}
+
+.summary-item span {
+  display: block;
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.summary-item strong {
+  display: block;
+  font-size: 1.1rem;
+  color: #0A1628;
+  margin-top: 0.15rem;
+}
+
+/* ===== ADVANCES TABLE ===== */
+.advances-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #fff8e1;
+  border-radius: 0.75rem;
+  border-left: 4px solid #f59e0b;
+}
+
+.advances-section h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 0.75rem;
+}
+
+.advances-table-wrap {
+  overflow-x: auto;
+}
+
+.advances-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.advances-table th {
+  text-align: left;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #6b7280;
+  padding: 0.4rem 0.4rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.advances-table td {
+  padding: 0.4rem 0.4rem;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.advances-table tfoot td {
+  border-top: 2px solid #e5e7eb;
+  font-weight: 600;
+  padding-top: 0.5rem;
+}
+
+.advance-date-time {
+  display: flex;
+  flex-direction: column;
+}
+
+.adv-date {
+  font-size: 0.8rem;
+  color: #1f2937;
+}
+
+.adv-time {
+  font-size: 0.65rem;
+  color: #6b7280;
+}
+
+.advance-amount-cell {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.advance-reason-cell {
+  font-size: 0.8rem;
+  color: #6b7280;
+  background: rgba(0,0,0,0.03);
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.remaining-salary {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  text-align: right;
+  font-size: 0.95rem;
+}
+
+.remaining-salary strong {
+  color: #0A1628;
+  font-size: 1.1rem;
+}
+
+/* ===== HISTORY LIST ===== */
+.history-list h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+.no-history {
+  text-align: center;
+  color: #9ca3af;
+  padding: 1rem;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  transition: all 0.2s;
+}
+
+.history-item:hover {
+  background: #f9fafb;
+}
+
+.history-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-date {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.history-date-full {
+  font-size: 0.65rem;
+  color: #6b7280;
+}
+
+.history-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.history-amount {
+  font-weight: 600;
+  color: #0A1628;
+}
+
+.deducted-badge {
+  font-size: 0.6rem;
+  color: #c62828;
+  background: #fce4ec;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+}
+
+.history-status.paid {
+  font-size: 0.65rem;
+  color: #065f46;
+  background: #d1fae5;
+  padding: 0.1rem 0.5rem;
+  border-radius: 9999px;
+}
+
+/* ===== ADVANCE MODAL ===== */
+.advance-info-box {
+  background: #f8f9fa;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.advance-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+  font-size: 0.9rem;
+}
+
+.advance-info-row.highlight {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 0.25rem;
+  padding-top: 0.4rem;
+}
+
+.advance-taken {
+  color: #c62828;
+}
+
+.remaining-amount {
+  color: #0A1628;
+  font-size: 1.05rem;
+}
+
+.advance-note-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.advance-note-box p {
+  margin: 0;
+}
+
+.advance-icon {
+  font-size: 1rem;
+}
+
+.btn-advance-save {
+  padding: 0.6rem 1.5rem;
+  border-radius: 0.75rem;
+  background: #c62828;
+  color: white;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-advance-save:hover {
+  background: #b71c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(198, 40, 40, 0.3);
+}
+
+/* ===== EDIT FORM ===== */
+.edit-modal .form-group {
+  margin-bottom: 1rem;
+}
+
+.edit-modal .form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.3rem;
+}
+
+.edit-modal .form-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 0.75rem;
+  outline: none;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+
+.edit-modal .form-input:focus {
+  border-color: #C9A84C;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
+}
+
+.edit-note {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
+.field-hint {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 0.15rem;
+  display: block;
+}
+
+/* ===== MODAL FOOTER ===== */
+.modal-footer {
+  padding: 1rem 1.5rem 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-cancel {
+  padding: 0.6rem 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #d1d5db;
+  background: transparent;
+  color: #6b7280;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #f3f4f6;
+}
+
+.btn-save {
+  padding: 0.6rem 1.5rem;
+  border-radius: 0.75rem;
+  background: #C9A84C;
+  color: white;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-save:hover {
+  background: #b8973a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(201, 168, 76, 0.3);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .salary-table {
+    font-size: 0.75rem;
+  }
+  
+  .salary-table th,
+  .salary-table td {
+    padding: 0.4rem 0.4rem;
+  }
+  
+  .action-group button {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.55rem;
+  }
+  
+  .history-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-content {
+    width: 95%;
+  }
+}
+
+/* Add these styles to your existing Salary.css */
+
+/* ===== ADVANCE MODAL - REASON FIELD ===== */
+.advance-modal .form-group {
+  margin-bottom: 1rem;
+}
+
+.advance-modal .form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.3rem;
+}
+
+.advance-modal .form-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 0.75rem;
+  outline: none;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+  background: white;
+}
+
+.advance-modal .form-input:focus {
+  border-color: #C9A84C;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
+}
+
+.field-hint {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 0.15rem;
+  display: block;
+}

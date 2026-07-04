@@ -1,0 +1,148 @@
+/* ===== LOGIN CONTAINER ===== */
+.login-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0A1628 0%, #1A2A4A 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* ===== LOGIN BOX ===== */
+.login-box {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 28rem;
+  width: 100%;
+  padding: 2.5rem 2rem;
+}
+
+/* ===== LOGO SECTION ===== */
+.login-logo {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-logo-img {
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+  aspect-ratio: 1/1;
+  object-fit: contain;
+  margin: 0 auto 0.5rem auto;
+  display: block;
+}
+
+.logo-subtitle {
+  color: #6b7280;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* ===== FORM ===== */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.3rem;
+}
+
+.login-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 0.75rem;
+  outline: none;
+  font-size: 1rem;
+  transition: all 0.3s;
+  background: white;
+  appearance: auto;
+  color: #1f2937;
+}
+
+.login-input:focus {
+  border-color: #1E1B4B;
+  box-shadow: 0 0 0 3px rgba(30, 27, 75, 0.15);
+}
+
+.login-input::placeholder {
+  color: #9ca3af;
+}
+
+/* ===== BRANCH INFO FOR ADMIN ===== */
+.branch-info {
+  margin-bottom: 1.25rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(30, 27, 75, 0.06);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(30, 27, 75, 0.15);
+}
+
+.branch-info .info-badge {
+  background: #1E1B4B;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ===== LOGIN BUTTON - LOGO MATCHING NAVY, PERMANENT COLOR ===== */
+.login-btn,
+.login-btn:hover,
+.login-btn:focus,
+.login-btn:active,
+.login-btn:visited {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  background-color: #1E1B4B !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none !important;
+  outline: none !important;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(30, 27, 75, 0.35) !important;
+  display: block;
+  -webkit-appearance: none;
+  appearance: none;
+  transform: none !important;
+  transition: none !important;
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #1E1B4B !important;
+}
+
+/* ===== FOOTER ===== */
+.login-footer {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.7rem;
+  margin-top: 1.5rem;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 480px) {
+  .login-box {
+    padding: 1.5rem;
+  }
+
+  .login-logo-img {
+    max-width: 120px;
+  }
+}
