@@ -60,71 +60,81 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
+// ===== ADMIN/MANAGER LAYOUT =====
+const AdminLayout = ({ children }) => {
+  return (
+    <div className="app-container">
+      <Sidebar />
+      <div className="main-content">
+        <Header />
+        <div className="page-content">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (token && user) {
       setIsLoggedIn(true);
+      setUserRole(user.role);
     }
   }, []);
 
   return (
     <BrowserRouter>
       {isLoggedIn ? (
-        <div className="app-container">
-          <Routes>
-            {/* Admin/Manager Routes with Sidebar */}
-            <Route 
-              path="/*" 
-              element={
-                <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                  <div className="app-layout">
-                    <Sidebar />
-                    <div className="main-content">
-                      <Header />
-                      <div className="page-content">
-                        <Routes>
-                          <Route path="/" element={<Home />} />
-                          <Route path="/inventory" element={<Inventory />} />
-                          <Route path="/finance/salary" element={<Salary />} />
-                          <Route path="/finance/fixed" element={<FixedExpense />} />
-                          <Route path="/finance/extra" element={<ExtraExpense />} />
-                          <Route path="/add-account" element={<AddAccount />} />
-                          <Route path="/recovery" element={<Recovery />} />
-                          <Route path="/employees/add" element={<AddEmployee />} />
-                          <Route path="/employee-expenses" element={<EmployeeExpenses />} />
-                          <Route path="/employee-report" element={<EmployeeReport />} />
-                        </Routes>
-                      </div>
-                    </div>
-                  </div>
-                </ProtectedRoute>
-              } 
-            />
+        <Routes>
+          {/* ===== ADMIN/MANAGER ROUTES ===== */}
+          <Route 
+            path="/*" 
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <AdminLayout>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/inventory" element={<Inventory />} />
+                    <Route path="/finance/salary" element={<Salary />} />
+                    <Route path="/finance/fixed" element={<FixedExpense />} />
+                    <Route path="/finance/extra" element={<ExtraExpense />} />
+                    <Route path="/add-account" element={<AddAccount />} />
+                    <Route path="/recovery" element={<Recovery />} />
+                    <Route path="/employees/add" element={<AddEmployee />} />
+                    <Route path="/employee-expenses" element={<EmployeeExpenses />} />
+                    <Route path="/employee-report" element={<EmployeeReport />} />
+                  </Routes>
+                </AdminLayout>
+              </ProtectedRoute>
+            } 
+          />
 
-            {/* Employee Routes - No Sidebar */}
-            <Route 
-              path="/employee-dashboard" 
-              element={
-                <ProtectedRoute allowedRoles={['employee']}>
-                  <EmployeeDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/employee-recovery" 
-              element={
-                <ProtectedRoute allowedRoles={['employee']}>
-                  <EmployeeRecovery />
-                </ProtectedRoute>
-              } 
-            />
+          {/* ===== EMPLOYEE ROUTES ===== */}
+          <Route 
+            path="/employee-dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={['employee']}>
+                <EmployeeDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/employee-recovery" 
+            element={
+              <ProtectedRoute allowedRoles={['employee']}>
+                <EmployeeRecovery />
+              </ProtectedRoute>
+            } 
+          />
 
-            <Route path="/login" element={<Navigate to="/" />} />
-          </Routes>
-        </div>
+          <Route path="/login" element={<Navigate to="/" />} />
+        </Routes>
       ) : (
         <Routes>
           <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
