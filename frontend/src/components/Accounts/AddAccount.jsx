@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Search, User, Phone, CreditCard, MapPin, Briefcase, Users, Package, DollarSign, Calendar, Upload, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, User, Phone, CreditCard, MapPin, Briefcase, Users, Package, DollarSign, Calendar, Upload, X, UserPlus, Mic, Play, Trash2, FileAudio } from 'lucide-react';
 import './AddAccount.css';
 
 const AddAccount = () => {
@@ -7,49 +7,40 @@ const AddAccount = () => {
   const [searchCNIC, setSearchCNIC] = useState('');
   const [showExisting, setShowExisting] = useState(false);
   const [existingAccounts, setExistingAccounts] = useState([]);
+  const [userRole, setUserRole] = useState(null);
+  const [userBranch, setUserBranch] = useState(null);
 
-  // ===== FORM STATE =====
+  // ===== VOICE FILE STATE =====
+  const [voiceFiles, setVoiceFiles] = useState([]);
+  const [playingIndex, setPlayingIndex] = useState(null);
+
+  // ===== EMPLOYEES DATA =====
+  const allEmployees = [
+    { id: 1, name: 'Ahmed Khan', branch: 1 },
+    { id: 2, name: 'Sara Ali', branch: 2 },
+    { id: 3, name: 'Usman Malik', branch: 1 },
+    { id: 4, name: 'Fatima Noor', branch: 2 },
+    { id: 5, name: 'Bilal Ahmed', branch: 1 },
+    { id: 6, name: 'Hina Riaz', branch: 2 },
+    { id: 7, name: 'Imran Ali', branch: 1 },
+    { id: 8, name: 'Nadia Khan', branch: 2 },
+  ];
+
   const [formData, setFormData] = useState({
     name: '',
     cnic: '',
     phone: '',
     address: '',
     work: '',
+    employeeId: '',
     cnicFront: null,
     cnicBack: null,
     cnicFrontPreview: '',
     cnicBackPreview: '',
     guarantors: [
-      { 
-        name: '', 
-        cnic: '', 
-        phone: '', 
-        address: '',
-        cnicFront: null,
-        cnicBack: null,
-        cnicFrontPreview: '',
-        cnicBackPreview: '',
-      },
-      { 
-        name: '', 
-        cnic: '', 
-        phone: '', 
-        address: '',
-        cnicFront: null,
-        cnicBack: null,
-        cnicFrontPreview: '',
-        cnicBackPreview: '',
-      },
-      { 
-        name: '', 
-        cnic: '', 
-        phone: '', 
-        address: '',
-        cnicFront: null,
-        cnicBack: null,
-        cnicFrontPreview: '',
-        cnicBackPreview: '',
-      },
+      { name: '', cnic: '', phone: '', address: '', cnicFront: null, cnicBack: null, cnicFrontPreview: '', cnicBackPreview: '' },
+      { name: '', cnic: '', phone: '', address: '', cnicFront: null, cnicBack: null, cnicFrontPreview: '', cnicBackPreview: '' },
+      { name: '', cnic: '', phone: '', address: '', cnicFront: null, cnicBack: null, cnicFrontPreview: '', cnicBackPreview: '' },
     ],
     productType: 'new',
     productName: '',
@@ -69,14 +60,86 @@ const AddAccount = () => {
 
   const [errors, setErrors] = useState({});
 
-  // ===== REFS FOR FILE INPUTS =====
   const cnicFrontRef = useRef(null);
   const cnicBackRef = useRef(null);
   const chalanFrontRef = useRef(null);
   const chalanBackRef = useRef(null);
-  
-  // Guarantor file refs
+  const voiceFileRef = useRef(null);
   const guarantorRefs = useRef([]);
+
+  // ===== GET USER ROLE AND BRANCH =====
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      setUserRole(user.role);
+      setUserBranch(user.branch);
+      // User ki branch set karo
+      if (user.branch) {
+        setFormData(prev => ({ ...prev, branch: parseInt(user.branch) }));
+      }
+    }
+  }, []);
+
+  // ===== GET EMPLOYEES BY BRANCH =====
+  const getEmployeesByBranch = (branch) => {
+    return allEmployees.filter(emp => emp.branch === branch);
+  };
+
+  // ===== GET EMPLOYEES FOR DROPDOWN (Strict branch) =====
+  const getAvailableEmployees = () => {
+    // Agar user branch hai toh sirf usi branch ke employees
+    if (userBranch) {
+      return getEmployeesByBranch(parseInt(userBranch));
+    }
+    // Admin without branch - all employees
+    return getEmployeesByBranch(formData.branch);
+  };
+
+  // ===== VOICE FILE FUNCTIONS =====
+  const handleVoiceFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('audio/')) {
+      alert('Please select an audio file (mp3, wav, etc.)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newVoice = {
+        id: Date.now(),
+        name: file.name,
+        size: (file.size / 1024).toFixed(2),
+        url: reader.result,
+        file: file,
+        timestamp: new Date().toLocaleString(),
+      };
+      setVoiceFiles([...voiceFiles, newVoice]);
+    };
+    reader.readAsDataURL(file);
+    if (voiceFileRef.current) voiceFileRef.current.value = '';
+  };
+
+  const playVoice = (index) => {
+    const voice = voiceFiles[index];
+    if (!voice) return;
+
+    const audio = new Audio(voice.url);
+    audio.play();
+    setPlayingIndex(index);
+    audio.onended = () => {
+      setPlayingIndex(null);
+    };
+  };
+
+  const deleteVoice = (index) => {
+    if (window.confirm('Delete this voice file?')) {
+      const newVoices = voiceFiles.filter((_, i) => i !== index);
+      setVoiceFiles(newVoices);
+      if (playingIndex === index) setPlayingIndex(null);
+    }
+  };
 
   // ===== CNIC SEARCH =====
   const handleCNICSearch = () => {
@@ -95,37 +158,32 @@ const AddAccount = () => {
     setShowExisting(true);
   };
 
-  // ===== LOAD EXISTING ACCOUNT =====
   const loadExistingAccount = (account) => {
-    setFormData({
-      ...formData,
-      name: account.name,
-      cnic: account.cnic,
-      phone: account.phone,
-      address: account.address,
-      work: account.work,
-    });
+    setFormData({ ...formData, name: account.name, cnic: account.cnic, phone: account.phone, address: account.address, work: account.work });
     setShowExisting(false);
     setSearchCNIC('');
   };
 
-  // ===== HANDLE INPUT CHANGE =====
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Agar user branch hai toh branch change nahi kar sakta
+    if (name === 'branch' && userBranch) {
+      return;
+    }
+    
+    setFormData({ ...formData, [name]: value });
   };
 
-  // ===== HANDLE GUARANTOR CHANGE =====
   const handleGuarantorChange = (index, field, value) => {
     const updated = [...formData.guarantors];
     updated[index][field] = value;
     setFormData({ ...formData, guarantors: updated });
   };
 
-  // ===== HANDLE GUARANTOR FILE UPLOAD =====
   const handleGuarantorFileUpload = (e, index, type) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onloadend = () => {
       const updated = [...formData.guarantors];
@@ -141,7 +199,6 @@ const AddAccount = () => {
     reader.readAsDataURL(file);
   };
 
-  // ===== REMOVE GUARANTOR FILE =====
   const removeGuarantorFile = (index, type) => {
     const updated = [...formData.guarantors];
     if (type === 'cnicFront') {
@@ -154,94 +211,47 @@ const AddAccount = () => {
     setFormData({ ...formData, guarantors: updated });
   };
 
-  // ===== HANDLE FILE UPLOAD =====
   const handleFileUpload = (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onloadend = () => {
-      if (type === 'cnicFront') {
-        setFormData({ ...formData, cnicFront: file, cnicFrontPreview: reader.result });
-      } else if (type === 'cnicBack') {
-        setFormData({ ...formData, cnicBack: file, cnicBackPreview: reader.result });
-      } else if (type === 'chalanFront') {
-        setFormData({ ...formData, chalanFront: file, chalanFrontPreview: reader.result });
-      } else if (type === 'chalanBack') {
-        setFormData({ ...formData, chalanBack: file, chalanBackPreview: reader.result });
-      }
+      if (type === 'cnicFront') setFormData({ ...formData, cnicFront: file, cnicFrontPreview: reader.result });
+      else if (type === 'cnicBack') setFormData({ ...formData, cnicBack: file, cnicBackPreview: reader.result });
+      else if (type === 'chalanFront') setFormData({ ...formData, chalanFront: file, chalanFrontPreview: reader.result });
+      else if (type === 'chalanBack') setFormData({ ...formData, chalanBack: file, chalanBackPreview: reader.result });
     };
     reader.readAsDataURL(file);
   };
 
-  // ===== REMOVE FILE =====
   const removeFile = (type) => {
-    if (type === 'cnicFront') {
-      setFormData({ ...formData, cnicFront: null, cnicFrontPreview: '' });
-      if (cnicFrontRef.current) cnicFrontRef.current.value = '';
-    } else if (type === 'cnicBack') {
-      setFormData({ ...formData, cnicBack: null, cnicBackPreview: '' });
-      if (cnicBackRef.current) cnicBackRef.current.value = '';
-    } else if (type === 'chalanFront') {
-      setFormData({ ...formData, chalanFront: null, chalanFrontPreview: '' });
-      if (chalanFrontRef.current) chalanFrontRef.current.value = '';
-    } else if (type === 'chalanBack') {
-      setFormData({ ...formData, chalanBack: null, chalanBackPreview: '' });
-      if (chalanBackRef.current) chalanBackRef.current.value = '';
-    }
+    if (type === 'cnicFront') { setFormData({ ...formData, cnicFront: null, cnicFrontPreview: '' }); if (cnicFrontRef.current) cnicFrontRef.current.value = ''; }
+    else if (type === 'cnicBack') { setFormData({ ...formData, cnicBack: null, cnicBackPreview: '' }); if (cnicBackRef.current) cnicBackRef.current.value = ''; }
+    else if (type === 'chalanFront') { setFormData({ ...formData, chalanFront: null, chalanFrontPreview: '' }); if (chalanFrontRef.current) chalanFrontRef.current.value = ''; }
+    else if (type === 'chalanBack') { setFormData({ ...formData, chalanBack: null, chalanBackPreview: '' }); if (chalanBackRef.current) chalanBackRef.current.value = ''; }
   };
 
-  // ===== VALIDATE STEP 1 =====
   const validateStep1 = () => {
     const newErrors = {};
-
     if (!formData.name) newErrors.name = 'Name is required';
     if (!formData.cnic) newErrors.cnic = 'CNIC is required';
     if (!formData.phone) newErrors.phone = 'Phone is required';
     if (!formData.address) newErrors.address = 'Address is required';
     if (!formData.work) newErrors.work = 'Work is required';
+    if (!formData.employeeId) newErrors.employeeId = 'Please select an employee';
     if (!formData.cnicFront) newErrors.cnicFront = 'CNIC Front image is required';
     if (!formData.cnicBack) newErrors.cnicBack = 'CNIC Back image is required';
     
-    // Validate guarantors
-    let guarantorErrors = [];
-    formData.guarantors.forEach((g, index) => {
-      const hasName = g.name.trim() !== '';
-      const hasCnic = g.cnic.trim() !== '';
-      const hasPhone = g.phone.trim() !== '';
-      const hasAddress = g.address.trim() !== '';
-      const hasFront = g.cnicFront !== null;
-      const hasBack = g.cnicBack !== null;
-      
-      // If any field is filled, all fields + images must be filled
-      if (hasName || hasCnic || hasPhone || hasAddress) {
-        if (!hasName) guarantorErrors.push(`Guarantor ${index + 1}: Name required`);
-        if (!hasCnic) guarantorErrors.push(`Guarantor ${index + 1}: CNIC required`);
-        if (!hasPhone) guarantorErrors.push(`Guarantor ${index + 1}: Phone required`);
-        if (!hasAddress) guarantorErrors.push(`Guarantor ${index + 1}: Address required`);
-        if (!hasFront) guarantorErrors.push(`Guarantor ${index + 1}: CNIC Front image required`);
-        if (!hasBack) guarantorErrors.push(`Guarantor ${index + 1}: CNIC Back image required`);
-      }
-    });
-
-    // Check minimum 2 complete guarantors
-    const completeGuarantors = formData.guarantors.filter(g => 
-      g.name.trim() && g.cnic.trim() && g.phone.trim() && g.address.trim() &&
-      g.cnicFront !== null && g.cnicBack !== null
-    );
-    
+    const completeGuarantors = formData.guarantors.filter(g => g.name.trim() && g.cnic.trim() && g.phone.trim() && g.address.trim() && g.cnicFront !== null && g.cnicBack !== null);
     if (completeGuarantors.length < 2) {
-      newErrors.guarantors = 'Minimum 2 complete guarantors required (Name, CNIC, Phone, Address + CNIC Images)';
+      newErrors.guarantors = 'Minimum 2 complete guarantors required';
     }
-
-    setErrors({ ...newErrors, guarantorErrors });
+    setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // ===== VALIDATE STEP 2 =====
   const validateStep2 = () => {
     const newErrors = {};
-
     if (!formData.productName) newErrors.productName = 'Product name is required';
     if (!formData.productPrice) newErrors.productPrice = 'Product price is required';
     if (!formData.invoicePrice) newErrors.invoicePrice = 'Invoice price is required';
@@ -249,60 +259,57 @@ const AddAccount = () => {
     if (!formData.dueDate) newErrors.dueDate = 'Due date is required';
     if (!formData.chalanFront) newErrors.chalanFront = 'Chalan Front image is required';
     if (!formData.chalanBack) newErrors.chalanBack = 'Chalan Back image is required';
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // ===== NEXT STEP =====
-  const handleNext = () => {
-    if (validateStep1()) {
-      setStep(2);
-    }
-  };
-
-  // ===== PREV STEP =====
-  const handlePrev = () => {
-    setStep(1);
-  };
-
-  // ===== SUBMIT =====
+  const handleNext = () => { if (validateStep1()) setStep(2); };
+  const handlePrev = () => setStep(1);
+  
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateStep2()) {
       console.log('Account Created:', formData);
+      console.log('Voice Files:', voiceFiles);
       alert('Account created successfully!');
     }
   };
 
-  // ===== GET GUARANTOR COUNT =====
   const getGuarantorCount = () => {
-    return formData.guarantors.filter(g => 
-      g.name && g.cnic && g.phone && g.address && 
-      g.cnicFront !== null && g.cnicBack !== null
-    ).length;
+    return formData.guarantors.filter(g => g.name && g.cnic && g.phone && g.address && g.cnicFront !== null && g.cnicBack !== null).length;
   };
+
+  const getSelectedEmployeeName = () => {
+    const emp = allEmployees.find(e => e.id === parseInt(formData.employeeId));
+    return emp ? emp.name : '';
+  };
+
+  const isAdmin = userRole === 'admin';
+  const isManager = userRole === 'manager';
+
+  // ===== Branch Label =====
+  const branchLabel = userBranch ? `Branch ${userBranch}` : 'All Branches';
 
   return (
     <div className="add-account-container">
       <h3>Create New Account</h3>
 
-      {/* ===== CNIC SEARCH ===== */}
+      {/* ===== BRANCH INFO ===== */}
+      {userBranch && (
+        <div className="branch-info">
+          <span className="branch-badge">
+            📍 {branchLabel}
+          </span>
+        </div>
+      )}
+
       <div className="cnic-search-section">
         <div className="cnic-search">
-          <input
-            type="text"
-            className="form-input"
-            placeholder="Search by CNIC..."
-            value={searchCNIC}
-            onChange={(e) => setSearchCNIC(e.target.value)}
-          />
+          <input type="text" className="form-input" placeholder="Search by CNIC..." value={searchCNIC} onChange={(e) => setSearchCNIC(e.target.value)} />
           <button className="btn-search" onClick={handleCNICSearch}>
-            <Search size={18} />
-            Search
+            <Search size={18} /> Search
           </button>
         </div>
-
         {showExisting && existingAccounts.length > 0 && (
           <div className="existing-accounts">
             <p className="existing-title">Existing Accounts Found:</p>
@@ -317,107 +324,152 @@ const AddAccount = () => {
       </div>
 
       <form onSubmit={handleSubmit}>
-        {/* ===== STEP 1: PERSONAL INFO + GUARANTORS + CNIC IMAGES ===== */}
         {step === 1 && (
           <div className="step-content">
             <div className="step-title">Step 1: Personal Information</div>
-
             <div className="form-grid">
               <div className="form-group">
                 <label>Full Name *</label>
                 <div className="input-with-icon">
                   <User size={18} />
-                  <input
-                    type="text"
-                    name="name"
-                    className="form-input"
-                    placeholder="Enter customer full name"
-                    value={formData.name}
-                    onChange={handleChange}
-                  />
+                  <input type="text" name="name" className="form-input" placeholder="Enter customer full name" value={formData.name} onChange={handleChange} />
                 </div>
                 {errors.name && <span className="error-text">{errors.name}</span>}
               </div>
-
               <div className="form-group">
                 <label>CNIC *</label>
                 <div className="input-with-icon">
                   <CreditCard size={18} />
-                  <input
-                    type="text"
-                    name="cnic"
-                    className="form-input"
-                    placeholder="XXXXX-XXXXXXX-X"
-                    value={formData.cnic}
-                    onChange={handleChange}
-                  />
+                  <input type="text" name="cnic" className="form-input" placeholder="XXXXX-XXXXXXX-X" value={formData.cnic} onChange={handleChange} />
                 </div>
                 {errors.cnic && <span className="error-text">{errors.cnic}</span>}
               </div>
-
               <div className="form-group">
                 <label>Phone Number *</label>
                 <div className="input-with-icon">
                   <Phone size={18} />
-                  <input
-                    type="tel"
-                    name="phone"
-                    className="form-input"
-                    placeholder="03XX-XXXXXXX"
-                    value={formData.phone}
-                    onChange={handleChange}
-                  />
+                  <input type="tel" name="phone" className="form-input" placeholder="03XX-XXXXXXX" value={formData.phone} onChange={handleChange} />
                 </div>
                 {errors.phone && <span className="error-text">{errors.phone}</span>}
               </div>
-
               <div className="form-group">
                 <label>Branch *</label>
-                <select
-                  name="branch"
-                  className="form-input"
-                  value={formData.branch}
+                <select 
+                  name="branch" 
+                  className="form-input" 
+                  value={formData.branch} 
                   onChange={handleChange}
+                  disabled={!!userBranch}
+                  style={userBranch ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
                 >
                   <option value={1}>Branch 1</option>
                   <option value={2}>Branch 2</option>
                 </select>
+                {userBranch && (
+                  <small className="field-hint">Branch locked to {branchLabel}</small>
+                )}
               </div>
-
               <div className="form-group full-width">
                 <label>Address *</label>
                 <div className="input-with-icon">
                   <MapPin size={18} />
-                  <input
-                    type="text"
-                    name="address"
-                    className="form-input"
-                    placeholder="Enter complete address"
-                    value={formData.address}
-                    onChange={handleChange}
-                  />
+                  <input type="text" name="address" className="form-input" placeholder="Enter complete address" value={formData.address} onChange={handleChange} />
                 </div>
                 {errors.address && <span className="error-text">{errors.address}</span>}
               </div>
-
               <div className="form-group full-width">
                 <label>Work / Occupation *</label>
                 <div className="input-with-icon">
                   <Briefcase size={18} />
-                  <input
-                    type="text"
-                    name="work"
-                    className="form-input"
-                    placeholder="Enter work/occupation"
-                    value={formData.work}
-                    onChange={handleChange}
-                  />
+                  <input type="text" name="work" className="form-input" placeholder="Enter work/occupation" value={formData.work} onChange={handleChange} />
                 </div>
                 {errors.work && <span className="error-text">{errors.work}</span>}
               </div>
             </div>
 
-            {/* ===== CNIC IMAGES ===== */}
+            {/* ===== EMPLOYEE DROPDOWN ===== */}
+            <div className="employee-section">
+              <h4>Account Opened By *</h4>
+              <div className="employee-dropdown-wrapper">
+                <div className="input-with-icon employee-select">
+                  <UserPlus size={18} />
+                  <select
+                    name="employeeId"
+                    className="form-input"
+                    value={formData.employeeId}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select Employee...</option>
+                    {getAvailableEmployees().map(emp => (
+                      <option key={emp.id} value={emp.id}>{emp.name}</option>
+                    ))}
+                  </select>
+                </div>
+                {formData.employeeId && (
+                  <div className="selected-employee-info">
+                    <span className="employee-badge">
+                      {getSelectedEmployeeName()} - {branchLabel}
+                    </span>
+                  </div>
+                )}
+                {errors.employeeId && <span className="error-text">{errors.employeeId}</span>}
+              </div>
+              {userBranch && (
+                <p className="employee-hint">Only employees from {branchLabel} are available</p>
+              )}
+            </div>
+
+            {/* ===== VOICE FILE UPLOAD SECTION ===== */}
+            <div className="voice-section">
+              <h4>Voice Consent / Raza Mandi</h4>
+              <p className="voice-hint">Customer ki raza mandi ki voice file upload karein (MP3, WAV, etc.)</p>
+              
+              <div className="voice-upload">
+                <div className="upload-area voice-upload-area" onClick={() => voiceFileRef.current?.click()}>
+                  <FileAudio size={32} />
+                  <span>Click to upload voice file</span>
+                  <span className="file-hint">MP3, WAV, M4A (Max 10MB)</span>
+                </div>
+                <input 
+                  type="file" 
+                  ref={voiceFileRef} 
+                  accept="audio/*" 
+                  onChange={handleVoiceFileUpload} 
+                  style={{ display: 'none' }} 
+                />
+              </div>
+
+              {voiceFiles.length > 0 && (
+                <div className="voice-files-list">
+                  <p className="voice-files-title">Uploaded Voice Files ({voiceFiles.length})</p>
+                  {voiceFiles.map((voice, index) => (
+                    <div key={voice.id} className="voice-file-item">
+                      <div className="voice-file-info">
+                        <Mic size={16} />
+                        <span className="voice-file-name">{voice.name}</span>
+                        <span className="voice-file-size">{voice.size} KB</span>
+                        <span className="voice-file-time">{voice.timestamp}</span>
+                      </div>
+                      <div className="voice-file-actions">
+                        <button 
+                          className="btn-play" 
+                          onClick={() => playVoice(index)}
+                        >
+                          {playingIndex === index ? '⏹' : '▶'} Play
+                        </button>
+                        <button 
+                          className="btn-delete-voice" 
+                          onClick={() => deleteVoice(index)}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="image-section">
               <h4>CNIC Images *</h4>
               <div className="image-grid">
@@ -427,37 +479,22 @@ const AddAccount = () => {
                     {formData.cnicFrontPreview ? (
                       <div className="preview-container">
                         <img src={formData.cnicFrontPreview} alt="CNIC Front" />
-                        <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeFile('cnicFront'); }}>
-                          <X size={16} />
-                        </button>
+                        <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeFile('cnicFront'); }}><X size={16} /></button>
                       </div>
-                    ) : (
-                      <>
-                        <Upload size={32} />
-                        <span>Click to upload</span>
-                      </>
-                    )}
+                    ) : ( <><Upload size={32} /><span>Click to upload</span></> )}
                   </div>
                   <input type="file" ref={cnicFrontRef} accept="image/*" onChange={(e) => handleFileUpload(e, 'cnicFront')} style={{ display: 'none' }} />
                   {errors.cnicFront && <span className="error-text">{errors.cnicFront}</span>}
                 </div>
-
                 <div className="image-upload-box">
                   <label>CNIC Back</label>
                   <div className="upload-area" onClick={() => cnicBackRef.current?.click()}>
                     {formData.cnicBackPreview ? (
                       <div className="preview-container">
                         <img src={formData.cnicBackPreview} alt="CNIC Back" />
-                        <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeFile('cnicBack'); }}>
-                          <X size={16} />
-                        </button>
+                        <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeFile('cnicBack'); }}><X size={16} /></button>
                       </div>
-                    ) : (
-                      <>
-                        <Upload size={32} />
-                        <span>Click to upload</span>
-                      </>
-                    )}
+                    ) : ( <><Upload size={32} /><span>Click to upload</span></> )}
                   </div>
                   <input type="file" ref={cnicBackRef} accept="image/*" onChange={(e) => handleFileUpload(e, 'cnicBack')} style={{ display: 'none' }} />
                   {errors.cnicBack && <span className="error-text">{errors.cnicBack}</span>}
@@ -465,114 +502,46 @@ const AddAccount = () => {
               </div>
             </div>
 
-            {/* ===== GUARANTORS WITH CNIC IMAGES ===== */}
             <div className="guarantors-section">
               <h4>Guarantors <span className="required-badge">Minimum 2 Required</span></h4>
               <p className="guarantor-count">Complete: {getGuarantorCount()}/3</p>
-              
               {formData.guarantors.map((g, index) => (
                 <div key={index} className="guarantor-card">
                   <div className="guarantor-header">
                     <Users size={16} />
                     <span>Guarantor {index + 1}</span>
-                    {g.name && g.cnic && g.cnicFront && g.cnicBack && (
-                      <span className="filled-badge">✓ Complete</span>
-                    )}
+                    {g.name && g.cnic && g.cnicFront && g.cnicBack && <span className="filled-badge">Complete</span>}
                   </div>
                   <div className="guarantor-grid">
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Full Name"
-                      value={g.name}
-                      onChange={(e) => handleGuarantorChange(index, 'name', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="CNIC"
-                      value={g.cnic}
-                      onChange={(e) => handleGuarantorChange(index, 'cnic', e.target.value)}
-                    />
-                    <input
-                      type="tel"
-                      className="form-input"
-                      placeholder="Phone"
-                      value={g.phone}
-                      onChange={(e) => handleGuarantorChange(index, 'phone', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Address"
-                      value={g.address}
-                      onChange={(e) => handleGuarantorChange(index, 'address', e.target.value)}
-                    />
+                    <input type="text" className="form-input" placeholder="Full Name" value={g.name} onChange={(e) => handleGuarantorChange(index, 'name', e.target.value)} />
+                    <input type="text" className="form-input" placeholder="CNIC" value={g.cnic} onChange={(e) => handleGuarantorChange(index, 'cnic', e.target.value)} />
+                    <input type="tel" className="form-input" placeholder="Phone" value={g.phone} onChange={(e) => handleGuarantorChange(index, 'phone', e.target.value)} />
+                    <input type="text" className="form-input" placeholder="Address" value={g.address} onChange={(e) => handleGuarantorChange(index, 'address', e.target.value)} />
                   </div>
-                  
-                  {/* Guarantor CNIC Images */}
                   <div className="guarantor-images">
                     <div className="guarantor-image-box">
                       <label>CNIC Front</label>
-                      <div className="upload-area small" onClick={() => {
-                        if (!guarantorRefs.current[index]) guarantorRefs.current[index] = {};
-                        guarantorRefs.current[index].front?.click();
-                      }}>
+                      <div className="upload-area small" onClick={() => { if (!guarantorRefs.current[index]) guarantorRefs.current[index] = {}; guarantorRefs.current[index].front?.click(); }}>
                         {g.cnicFrontPreview ? (
                           <div className="preview-container">
                             <img src={g.cnicFrontPreview} alt="Guarantor CNIC Front" />
-                            <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeGuarantorFile(index, 'cnicFront'); }}>
-                              <X size={14} />
-                            </button>
+                            <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeGuarantorFile(index, 'cnicFront'); }}><X size={14} /></button>
                           </div>
-                        ) : (
-                          <>
-                            <Upload size={20} />
-                            <span>Upload Front</span>
-                          </>
-                        )}
+                        ) : ( <><Upload size={20} /><span>Upload Front</span></> )}
                       </div>
-                      <input 
-                        type="file" 
-                        ref={(el) => {
-                          if (!guarantorRefs.current[index]) guarantorRefs.current[index] = {};
-                          guarantorRefs.current[index].front = el;
-                        }} 
-                        accept="image/*" 
-                        onChange={(e) => handleGuarantorFileUpload(e, index, 'cnicFront')} 
-                        style={{ display: 'none' }} 
-                      />
+                      <input type="file" ref={(el) => { if (!guarantorRefs.current[index]) guarantorRefs.current[index] = {}; guarantorRefs.current[index].front = el; }} accept="image/*" onChange={(e) => handleGuarantorFileUpload(e, index, 'cnicFront')} style={{ display: 'none' }} />
                     </div>
                     <div className="guarantor-image-box">
                       <label>CNIC Back</label>
-                      <div className="upload-area small" onClick={() => {
-                        if (!guarantorRefs.current[index]) guarantorRefs.current[index] = {};
-                        guarantorRefs.current[index].back?.click();
-                      }}>
+                      <div className="upload-area small" onClick={() => { if (!guarantorRefs.current[index]) guarantorRefs.current[index] = {}; guarantorRefs.current[index].back?.click(); }}>
                         {g.cnicBackPreview ? (
                           <div className="preview-container">
                             <img src={g.cnicBackPreview} alt="Guarantor CNIC Back" />
-                            <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeGuarantorFile(index, 'cnicBack'); }}>
-                              <X size={14} />
-                            </button>
+                            <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeGuarantorFile(index, 'cnicBack'); }}><X size={14} /></button>
                           </div>
-                        ) : (
-                          <>
-                            <Upload size={20} />
-                            <span>Upload Back</span>
-                          </>
-                        )}
+                        ) : ( <><Upload size={20} /><span>Upload Back</span></> )}
                       </div>
-                      <input 
-                        type="file" 
-                        ref={(el) => {
-                          if (!guarantorRefs.current[index]) guarantorRefs.current[index] = {};
-                          guarantorRefs.current[index].back = el;
-                        }} 
-                        accept="image/*" 
-                        onChange={(e) => handleGuarantorFileUpload(e, index, 'cnicBack')} 
-                        style={{ display: 'none' }} 
-                      />
+                      <input type="file" ref={(el) => { if (!guarantorRefs.current[index]) guarantorRefs.current[index] = {}; guarantorRefs.current[index].back = el; }} accept="image/*" onChange={(e) => handleGuarantorFileUpload(e, index, 'cnicBack')} style={{ display: 'none' }} />
                     </div>
                   </div>
                 </div>
@@ -582,134 +551,70 @@ const AddAccount = () => {
           </div>
         )}
 
-        {/* ===== STEP 2: PRODUCT + INSTALLMENTS + CHALAN ===== */}
         {step === 2 && (
           <div className="step-content">
             <div className="step-title">Step 2: Product & Installment Details</div>
-
             <div className="form-grid">
               <div className="form-group">
                 <label>Product Type *</label>
-                <select
-                  name="productType"
-                  className="form-input"
-                  value={formData.productType}
-                  onChange={handleChange}
-                >
+                <select name="productType" className="form-input" value={formData.productType} onChange={handleChange}>
                   <option value="new">New</option>
                   <option value="used">Used</option>
                 </select>
               </div>
-
               <div className="form-group">
                 <label>Product Name *</label>
                 <div className="input-with-icon">
                   <Package size={18} />
-                  <input
-                    type="text"
-                    name="productName"
-                    className="form-input"
-                    placeholder="Enter product name"
-                    value={formData.productName}
-                    onChange={handleChange}
-                  />
+                  <input type="text" name="productName" className="form-input" placeholder="Enter product name" value={formData.productName} onChange={handleChange} />
                 </div>
                 {errors.productName && <span className="error-text">{errors.productName}</span>}
               </div>
-
               <div className="form-group">
-                <label>Product Price (₹) *</label>
+                <label>Product Price (PKR) *</label>
                 <div className="input-with-icon">
                   <DollarSign size={18} />
-                  <input
-                    type="number"
-                    name="productPrice"
-                    className="form-input"
-                    placeholder="Enter product price"
-                    value={formData.productPrice}
-                    onChange={handleChange}
-                  />
+                  <input type="number" name="productPrice" className="form-input" placeholder="Enter product price" value={formData.productPrice} onChange={handleChange} />
                 </div>
                 {errors.productPrice && <span className="error-text">{errors.productPrice}</span>}
               </div>
-
               <div className="form-group">
-                <label>Invoice Price (₹) *</label>
+                <label>Invoice Price (PKR) *</label>
                 <div className="input-with-icon">
                   <DollarSign size={18} />
-                  <input
-                    type="number"
-                    name="invoicePrice"
-                    className="form-input"
-                    placeholder="Enter invoice price"
-                    value={formData.invoicePrice}
-                    onChange={handleChange}
-                  />
+                  <input type="number" name="invoicePrice" className="form-input" placeholder="Enter invoice price" value={formData.invoicePrice} onChange={handleChange} />
                 </div>
                 {errors.invoicePrice && <span className="error-text">{errors.invoicePrice}</span>}
               </div>
-
               <div className="form-group">
-                <label>Advance / 1st Installment (₹)</label>
+                <label>Advance / 1st Installment (PKR)</label>
                 <div className="input-with-icon">
                   <DollarSign size={18} />
-                  <input
-                    type="number"
-                    name="advanceAmount"
-                    className="form-input"
-                    placeholder="Enter advance amount"
-                    value={formData.advanceAmount}
-                    onChange={handleChange}
-                  />
+                  <input type="number" name="advanceAmount" className="form-input" placeholder="Enter advance amount" value={formData.advanceAmount} onChange={handleChange} />
                 </div>
               </div>
-
               <div className="form-group">
                 <label>Number of Installments *</label>
                 <div className="input-with-icon">
                   <Calendar size={18} />
-                  <input
-                    type="number"
-                    name="noOfInstallments"
-                    className="form-input"
-                    placeholder="e.g., 6, 12, 24"
-                    value={formData.noOfInstallments}
-                    onChange={handleChange}
-                  />
+                  <input type="number" name="noOfInstallments" className="form-input" placeholder="e.g., 6, 12, 24" value={formData.noOfInstallments} onChange={handleChange} />
                 </div>
                 {errors.noOfInstallments && <span className="error-text">{errors.noOfInstallments}</span>}
               </div>
-
               <div className="form-group">
                 <label>Due Date *</label>
-                <input
-                  type="date"
-                  name="dueDate"
-                  className="form-input"
-                  value={formData.dueDate}
-                  onChange={handleChange}
-                />
+                <input type="date" name="dueDate" className="form-input" value={formData.dueDate} onChange={handleChange} />
                 {errors.dueDate && <span className="error-text">{errors.dueDate}</span>}
               </div>
-
               <div className="form-group">
                 <label>Installment Amount</label>
                 <div className="input-with-icon">
                   <DollarSign size={18} />
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.productPrice && formData.noOfInstallments ? 
-                      `₹${(parseInt(formData.productPrice) / parseInt(formData.noOfInstallments)).toLocaleString()}` : 
-                      'Calculate from price and installments'}
-                    readOnly
-                    style={{ background: '#f8f9fa' }}
-                  />
+                  <input type="text" className="form-input" value={formData.productPrice && formData.noOfInstallments ? `PKR ${(parseInt(formData.productPrice) / parseInt(formData.noOfInstallments)).toLocaleString()}` : 'Calculate from price and installments'} readOnly style={{ background: '#f8f9fa' }} />
                 </div>
               </div>
             </div>
 
-            {/* ===== CHALAN IMAGES ===== */}
             <div className="image-section">
               <h4>Chalan Images *</h4>
               <div className="image-grid">
@@ -719,37 +624,22 @@ const AddAccount = () => {
                     {formData.chalanFrontPreview ? (
                       <div className="preview-container">
                         <img src={formData.chalanFrontPreview} alt="Chalan Front" />
-                        <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeFile('chalanFront'); }}>
-                          <X size={16} />
-                        </button>
+                        <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeFile('chalanFront'); }}><X size={16} /></button>
                       </div>
-                    ) : (
-                      <>
-                        <Upload size={32} />
-                        <span>Click to upload</span>
-                      </>
-                    )}
+                    ) : ( <><Upload size={32} /><span>Click to upload</span></> )}
                   </div>
                   <input type="file" ref={chalanFrontRef} accept="image/*" onChange={(e) => handleFileUpload(e, 'chalanFront')} style={{ display: 'none' }} />
                   {errors.chalanFront && <span className="error-text">{errors.chalanFront}</span>}
                 </div>
-
                 <div className="image-upload-box">
                   <label>Chalan Back</label>
                   <div className="upload-area" onClick={() => chalanBackRef.current?.click()}>
                     {formData.chalanBackPreview ? (
                       <div className="preview-container">
                         <img src={formData.chalanBackPreview} alt="Chalan Back" />
-                        <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeFile('chalanBack'); }}>
-                          <X size={16} />
-                        </button>
+                        <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeFile('chalanBack'); }}><X size={16} /></button>
                       </div>
-                    ) : (
-                      <>
-                        <Upload size={32} />
-                        <span>Click to upload</span>
-                      </>
-                    )}
+                    ) : ( <><Upload size={32} /><span>Click to upload</span></> )}
                   </div>
                   <input type="file" ref={chalanBackRef} accept="image/*" onChange={(e) => handleFileUpload(e, 'chalanBack')} style={{ display: 'none' }} />
                   {errors.chalanBack && <span className="error-text">{errors.chalanBack}</span>}
@@ -759,26 +649,15 @@ const AddAccount = () => {
           </div>
         )}
 
-        {/* ===== FORM ACTIONS ===== */}
         <div className="form-actions">
-          {step === 2 && (
-            <button type="button" className="btn-prev" onClick={handlePrev}>
-              ← Previous
-            </button>
-          )}
-          
+          {step === 2 && <button type="button" className="btn-prev" onClick={handlePrev}>Previous</button>}
           {step === 1 ? (
-            <button type="button" className="btn-next" onClick={handleNext}>
-              Next →
-            </button>
+            <button type="button" className="btn-next" onClick={handleNext}>Next →</button>
           ) : (
-            <button type="submit" className="btn-submit">
-              Create Account
-            </button>
+            <button type="submit" className="btn-submit">Create Account</button>
           )}
         </div>
 
-        {/* ===== STEP INDICATOR ===== */}
         <div className="step-indicator">
           <span className={step === 1 ? 'active' : 'done'}>1. Personal Info</span>
           <span className="step-line"></span>

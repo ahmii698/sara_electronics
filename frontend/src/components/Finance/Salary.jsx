@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Eye, Edit, DollarSign, RefreshCw, X, Wallet } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Eye, Edit, DollarSign, RefreshCw, X, Wallet, Users, Calendar, Clock, Award, Building } from 'lucide-react';
 import './Salary.css';
 
 const Salary = () => {
@@ -11,6 +11,17 @@ const Salary = () => {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [advanceAmount, setAdvanceAmount] = useState('');
   const [advanceReason, setAdvanceReason] = useState('');
+  const [userBranch, setUserBranch] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+
+  // ===== GET USER DATA =====
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      setUserRole(user.role);
+      setUserBranch(user.branch);
+    }
+  }, []);
 
   const [employees, setEmployees] = useState([
     { 
@@ -18,11 +29,14 @@ const Salary = () => {
       name: 'Ahmed Khan', 
       branch: 1, 
       salary: 45000, 
+      commission: 12000,
       paid: true,
       lastPaid: '2026-06-01',
       totalAdvances: 13000,
+      accountCount: 6,
       history: [
         { date: '2026-06-01 10:30 AM', amount: 45000, status: 'Paid', type: 'salary' },
+        { date: '2026-06-01 10:30 AM', amount: 12000, status: 'Paid', type: 'commission' },
         { date: '2026-05-01 09:15 AM', amount: 45000, status: 'Paid', type: 'salary' },
         { date: '2026-04-01 11:00 AM', amount: 45000, status: 'Paid', type: 'salary' },
       ],
@@ -37,9 +51,11 @@ const Salary = () => {
       name: 'Sara Ali', 
       branch: 2, 
       salary: 38000, 
+      commission: 4000,
       paid: false,
       lastPaid: '2026-05-01',
       totalAdvances: 2000,
+      accountCount: 2,
       history: [
         { date: '2026-05-01 09:30 AM', amount: 38000, status: 'Paid', type: 'salary' },
         { date: '2026-04-01 10:45 AM', amount: 38000, status: 'Paid', type: 'salary' },
@@ -53,9 +69,11 @@ const Salary = () => {
       name: 'Usman Malik', 
       branch: 1, 
       salary: 52000, 
+      commission: 0,
       paid: true,
       lastPaid: '2026-06-01',
       totalAdvances: 0,
+      accountCount: 0,
       history: [
         { date: '2026-06-01 08:45 AM', amount: 52000, status: 'Paid', type: 'salary' },
         { date: '2026-05-01 09:20 AM', amount: 52000, status: 'Paid', type: 'salary' },
@@ -69,9 +87,11 @@ const Salary = () => {
       name: 'Fatima Noor', 
       branch: 2, 
       salary: 41000, 
+      commission: 2000,
       paid: false,
       lastPaid: '2026-04-01',
       totalAdvances: 500,
+      accountCount: 1,
       history: [
         { date: '2026-04-01 09:00 AM', amount: 41000, status: 'Paid', type: 'salary' },
       ],
@@ -81,9 +101,20 @@ const Salary = () => {
     },
   ]);
 
-  const filtered = employees.filter(e => 
-    e.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // ===== FILTER - BRANCH WISE =====
+  const filtered = employees.filter(e => {
+    const searchMatch = e.name.toLowerCase().includes(search.toLowerCase());
+    // Admin ke liye branch filter
+    let branchMatch = true;
+    if (userRole === 'admin' && userBranch) {
+      branchMatch = e.branch === parseInt(userBranch);
+    }
+    // Manager ke liye branch filter
+    if (userRole === 'manager' && userBranch) {
+      branchMatch = e.branch === parseInt(userBranch);
+    }
+    return searchMatch && branchMatch;
+  });
 
   // ===== GET CURRENT DATE TIME =====
   const getCurrentDateTime = () => {
@@ -99,8 +130,10 @@ const Salary = () => {
     setEmployees(employees.map(emp => {
       if (emp.id === id) {
         const finalSalary = emp.salary - emp.totalAdvances;
+        const finalTotal = finalSalary + emp.commission;
         const newHistory = [
           { date: dateTime, amount: finalSalary, status: 'Paid', type: 'salary', advanceDeducted: emp.totalAdvances },
+          ...(emp.commission > 0 ? [{ date: dateTime, amount: emp.commission, status: 'Paid', type: 'commission' }] : []),
           ...emp.history
         ];
         return { 
@@ -170,6 +203,18 @@ const Salary = () => {
     setEditingEmployee(null);
   };
 
+  // ===== EDIT COMMISSION =====
+  const handleEditCommission = (id, newCommission) => {
+    setEmployees(employees.map(emp => {
+      if (emp.id === id) {
+        return { ...emp, commission: parseInt(newCommission) };
+      }
+      return emp;
+    }));
+    setShowEditModal(false);
+    setEditingEmployee(null);
+  };
+
   // ===== VIEW HISTORY =====
   const handleViewHistory = (emp) => {
     setSelectedEmployee(emp);
@@ -206,10 +251,47 @@ const Salary = () => {
     return date.toLocaleString('default', { month: 'long', year: 'numeric' });
   };
 
+  // ===== TOTAL SALARY SUMMARY (Filtered) =====
+  const totalSalary = filtered.reduce((sum, e) => sum + e.salary, 0);
+  const totalCommission = filtered.reduce((sum, e) => sum + e.commission, 0);
+  const totalPaid = filtered.filter(e => e.paid).length;
+  const totalPending = filtered.filter(e => !e.paid).length;
+  const totalEmployees = filtered.length;
+
+  const branchLabel = userBranch ? `Branch ${userBranch}` : 'All Branches';
+
   return (
     <div className="salary-container">
       <div className="salary-header">
-        <h3>Employee Salary Management</h3>
+        <div className="header-left">
+          <h3>Employee Salary Management</h3>
+          <div className="branch-label">
+            <Building size={14} />
+            <span>{branchLabel}</span>
+          </div>
+          <div className="header-stats">
+            <span className="stat-chip">
+              <Users size={14} />
+              {totalEmployees} Employees
+            </span>
+            <span className="stat-chip paid-stat">
+              <span className="dot paid"></span>
+              {totalPaid} Paid
+            </span>
+            <span className="stat-chip pending-stat">
+              <span className="dot pending"></span>
+              {totalPending} Pending
+            </span>
+            <span className="stat-chip">
+              <DollarSign size={14} />
+              PKR {totalSalary.toLocaleString()}
+            </span>
+            <span className="stat-chip commission-stat">
+              <Award size={14} />
+              PKR {totalCommission.toLocaleString()}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="salary-search">
@@ -228,7 +310,9 @@ const Salary = () => {
             <tr>
               <th>Employee</th>
               <th>Branch</th>
-              <th>Salary (₹)</th>
+              <th>Salary (PKR)</th>
+              <th>Commission</th>
+              <th>Accounts</th>
               <th>Advances</th>
               <th>Status</th>
               <th>Last Paid</th>
@@ -236,69 +320,85 @@ const Salary = () => {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(emp => (
-              <tr key={emp.id}>
-                <td className="font-medium">{emp.name}</td>
-                <td>Branch {emp.branch}</td>
-                <td>₹{emp.salary.toLocaleString()}</td>
-                <td>
-                  {emp.totalAdvances > 0 ? (
-                    <span className="advance-badge">₹{emp.totalAdvances.toLocaleString()}</span>
-                  ) : (
-                    <span className="no-advance">None</span>
-                  )}
-                </td>
-                <td>
-                  <span className={emp.paid ? 'badge-active' : 'badge-pending'}>
-                    {emp.paid ? 'Paid' : 'Pending'}
-                  </span>
-                </td>
-                <td>{emp.lastPaid || 'Never'}</td>
-                <td>
-                  <div className="action-group">
-                    <button 
-                      className="btn-view" 
-                      onClick={() => handleViewHistory(emp)}
-                      title="View History"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button 
-                      className="btn-edit" 
-                      onClick={() => openEditModal(emp)}
-                      title="Edit Salary"
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button 
-                      className="btn-advance" 
-                      onClick={() => openAdvanceModal(emp)}
-                      title="Give Advance"
-                    >
-                      <Wallet size={16} />
-                    </button>
-                    {emp.paid ? (
-                      <button 
-                        className="btn-reset" 
-                        onClick={() => handleReset(emp.id)}
-                        title="Reset for this month"
-                      >
-                        <RefreshCw size={16} />
-                      </button>
-                    ) : (
-                      <button 
-                        className="btn-pay" 
-                        onClick={() => handlePayNow(emp.id)}
-                        title="Pay Now"
-                      >
-                        <DollarSign size={16} />
-                        Pay
-                      </button>
-                    )}
-                  </div>
-                </td>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan="9" className="no-data">No employees found for {branchLabel}</td>
               </tr>
-            ))}
+            ) : (
+              filtered.map(emp => (
+                <tr key={emp.id}>
+                  <td className="employee-name">{emp.name}</td>
+                  <td><span className="branch-badge">Branch {emp.branch}</span></td>
+                  <td className="salary-amount">PKR {emp.salary.toLocaleString()}</td>
+                  <td className="commission-amount">
+                    {emp.commission > 0 ? (
+                      <span className="commission-badge">PKR {emp.commission.toLocaleString()}</span>
+                    ) : (
+                      <span className="no-commission">None</span>
+                    )}
+                  </td>
+                  <td>
+                    <span className="account-badge">{emp.accountCount}</span>
+                  </td>
+                  <td>
+                    {emp.totalAdvances > 0 ? (
+                      <span className="advance-badge">PKR {emp.totalAdvances.toLocaleString()}</span>
+                    ) : (
+                      <span className="no-advance">None</span>
+                    )}
+                  </td>
+                  <td>
+                    <span className={emp.paid ? 'badge-active' : 'badge-pending'}>
+                      {emp.paid ? 'Paid' : 'Pending'}
+                    </span>
+                  </td>
+                  <td className="last-paid">{emp.lastPaid || 'Never'}</td>
+                  <td>
+                    <div className="action-group">
+                      <button 
+                        className="btn-view" 
+                        onClick={() => handleViewHistory(emp)}
+                        title="View History"
+                      >
+                        <Eye size={15} />
+                      </button>
+                      <button 
+                        className="btn-edit" 
+                        onClick={() => openEditModal(emp)}
+                        title="Edit Salary"
+                      >
+                        <Edit size={15} />
+                      </button>
+                      <button 
+                        className="btn-advance" 
+                        onClick={() => openAdvanceModal(emp)}
+                        title="Give Advance"
+                      >
+                        <Wallet size={15} />
+                      </button>
+                      {emp.paid ? (
+                        <button 
+                          className="btn-reset" 
+                          onClick={() => handleReset(emp.id)}
+                          title="Reset for this month"
+                        >
+                          <RefreshCw size={15} />
+                        </button>
+                      ) : (
+                        <button 
+                          className="btn-pay" 
+                          onClick={() => handlePayNow(emp.id)}
+                          title="Pay Now"
+                        >
+                          <DollarSign size={15} />
+                          Pay
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -308,7 +408,10 @@ const Salary = () => {
         <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
           <div className="modal-content history-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Salary History - {selectedEmployee.name}</h3>
+              <div className="modal-header-left">
+                <Clock size={20} className="modal-icon" />
+                <h3>Salary History - {selectedEmployee.name}</h3>
+              </div>
               <button className="modal-close" onClick={() => setShowHistoryModal(false)}>
                 <X size={24} />
               </button>
@@ -318,22 +421,21 @@ const Salary = () => {
               <div className="history-summary">
                 <div className="summary-item">
                   <span>Current Salary</span>
-                  <strong>₹{selectedEmployee.salary.toLocaleString()}</strong>
+                  <strong>PKR {selectedEmployee.salary.toLocaleString()}</strong>
+                </div>
+                <div className="summary-item">
+                  <span>Commission</span>
+                  <strong>PKR {selectedEmployee.commission.toLocaleString()}</strong>
                 </div>
                 <div className="summary-item">
                   <span>Total Paid</span>
-                  <strong>₹{selectedEmployee.history.reduce((sum, h) => sum + h.amount, 0).toLocaleString()}</strong>
-                </div>
-                <div className="summary-item">
-                  <span>Total Payments</span>
-                  <strong>{selectedEmployee.history.length}</strong>
+                  <strong>PKR {selectedEmployee.history.reduce((sum, h) => sum + h.amount, 0).toLocaleString()}</strong>
                 </div>
               </div>
 
-              {/* Advances Section with Date + Time */}
               {selectedEmployee.advances.length > 0 && (
                 <div className="advances-section">
-                  <h4>💰 Salary Advances</h4>
+                  <h4>Salary Advances</h4>
                   <div className="advances-table-wrap">
                     <table className="advances-table">
                       <thead>
@@ -352,7 +454,7 @@ const Salary = () => {
                                 <span className="adv-time">{getTimeOnly(item.date)}</span>
                               </div>
                             </td>
-                            <td className="advance-amount-cell">-₹{item.amount.toLocaleString()}</td>
+                            <td className="advance-amount-cell">-PKR {item.amount.toLocaleString()}</td>
                             <td className="advance-reason-cell">{item.reason}</td>
                           </tr>
                         ))}
@@ -360,21 +462,21 @@ const Salary = () => {
                       <tfoot>
                         <tr>
                           <td><strong>Total Advances</strong></td>
-                          <td><strong>₹{selectedEmployee.totalAdvances.toLocaleString()}</strong></td>
+                          <td><strong>PKR {selectedEmployee.totalAdvances.toLocaleString()}</strong></td>
                           <td></td>
                         </tr>
                       </tfoot>
                     </table>
                   </div>
                   <div className="remaining-salary">
-                    <span>💰 Remaining Salary: </span>
-                    <strong>₹{(selectedEmployee.salary - selectedEmployee.totalAdvances).toLocaleString()}</strong>
+                    <span>Remaining Salary: </span>
+                    <strong>PKR {(selectedEmployee.salary - selectedEmployee.totalAdvances).toLocaleString()}</strong>
                   </div>
                 </div>
               )}
 
               <div className="history-list">
-                <h4>📋 Payment History</h4>
+                <h4>Payment History</h4>
                 {selectedEmployee.history.length === 0 ? (
                   <p className="no-history">No payment history found</p>
                 ) : (
@@ -387,11 +489,13 @@ const Salary = () => {
                         </span>
                       </div>
                       <div className="history-right">
-                        <span className="history-amount">₹{item.amount.toLocaleString()}</span>
+                        <span className="history-amount">PKR {item.amount.toLocaleString()}</span>
                         {item.advanceDeducted && item.advanceDeducted > 0 && (
-                          <span className="deducted-badge">-₹{item.advanceDeducted} advance</span>
+                          <span className="deducted-badge">-PKR {item.advanceDeducted} advance</span>
                         )}
-                        <span className="history-status paid">✓ Paid</span>
+                        <span className={`history-status ${item.type === 'commission' ? 'commission' : 'paid'}`}>
+                          {item.type === 'commission' ? 'Commission' : 'Paid'}
+                        </span>
                       </div>
                     </div>
                   ))
@@ -406,12 +510,15 @@ const Salary = () => {
         </div>
       )}
 
-      {/* ===== ADVANCE MODAL WITH REASON ===== */}
+      {/* ===== ADVANCE MODAL ===== */}
       {showAdvanceModal && selectedEmployee && (
         <div className="modal-overlay" onClick={() => setShowAdvanceModal(false)}>
           <div className="modal-content advance-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>💰 Give Advance - {selectedEmployee.name}</h3>
+              <div className="modal-header-left">
+                <Wallet size={20} className="modal-icon" />
+                <h3>Give Advance - {selectedEmployee.name}</h3>
+              </div>
               <button className="modal-close" onClick={() => setShowAdvanceModal(false)}>
                 <X size={24} />
               </button>
@@ -421,20 +528,24 @@ const Salary = () => {
               <div className="advance-info-box">
                 <div className="advance-info-row">
                   <span>Current Salary:</span>
-                  <strong>₹{selectedEmployee.salary.toLocaleString()}</strong>
+                  <strong>PKR {selectedEmployee.salary.toLocaleString()}</strong>
+                </div>
+                <div className="advance-info-row">
+                  <span>Commission:</span>
+                  <strong className="commission-highlight">PKR {selectedEmployee.commission.toLocaleString()}</strong>
                 </div>
                 <div className="advance-info-row">
                   <span>Total Advances Taken:</span>
-                  <strong className="advance-taken">₹{selectedEmployee.totalAdvances.toLocaleString()}</strong>
+                  <strong className="advance-taken">PKR {selectedEmployee.totalAdvances.toLocaleString()}</strong>
                 </div>
                 <div className="advance-info-row highlight">
                   <span>Remaining Salary:</span>
-                  <strong className="remaining-amount">₹{(selectedEmployee.salary - selectedEmployee.totalAdvances).toLocaleString()}</strong>
+                  <strong className="remaining-amount">PKR {(selectedEmployee.salary - selectedEmployee.totalAdvances).toLocaleString()}</strong>
                 </div>
               </div>
 
               <div className="form-group">
-                <label>Advance Amount (₹) *</label>
+                <label>Advance Amount (PKR) *</label>
                 <input
                   type="number"
                   className="form-input"
@@ -444,7 +555,7 @@ const Salary = () => {
                   min="1"
                   max={selectedEmployee.salary - selectedEmployee.totalAdvances}
                 />
-                <small className="field-hint">Max: ₹{(selectedEmployee.salary - selectedEmployee.totalAdvances).toLocaleString()}</small>
+                <small className="field-hint">Max: PKR {(selectedEmployee.salary - selectedEmployee.totalAdvances).toLocaleString()}</small>
               </div>
 
               <div className="form-group">
@@ -460,7 +571,7 @@ const Salary = () => {
               </div>
 
               <div className="advance-note-box">
-                <span className="advance-icon">⚠️</span>
+                <span className="advance-icon">ⓘ</span>
                 <p>This amount will be deducted from next salary payment.</p>
               </div>
             </div>
@@ -480,7 +591,10 @@ const Salary = () => {
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content edit-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Edit Salary - {editingEmployee.name}</h3>
+              <div className="modal-header-left">
+                <Edit size={20} className="modal-icon" />
+                <h3>Edit Salary - {editingEmployee.name}</h3>
+              </div>
               <button className="modal-close" onClick={() => setShowEditModal(false)}>
                 <X size={24} />
               </button>
@@ -488,13 +602,23 @@ const Salary = () => {
 
             <div className="modal-body">
               <div className="form-group">
-                <label>New Salary (₹)</label>
+                <label>New Salary (PKR)</label>
                 <input
                   type="number"
                   className="form-input"
                   defaultValue={editingEmployee.salary}
                   id="editSalaryInput"
                 />
+              </div>
+              <div className="form-group">
+                <label>Commission (PKR) - {editingEmployee.accountCount} Accounts x 2000</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  defaultValue={editingEmployee.commission}
+                  id="editCommissionInput"
+                />
+                <small className="field-hint">Auto-calculated: {editingEmployee.accountCount} accounts × 2,000 = {editingEmployee.accountCount * 2000}</small>
               </div>
               <p className="edit-note">Branch: Branch {editingEmployee.branch}</p>
             </div>
@@ -504,12 +628,15 @@ const Salary = () => {
               <button 
                 className="btn-save" 
                 onClick={() => {
-                  const input = document.getElementById('editSalaryInput');
-                  const newSalary = input.value;
+                  const salaryInput = document.getElementById('editSalaryInput');
+                  const commissionInput = document.getElementById('editCommissionInput');
+                  const newSalary = salaryInput.value;
+                  const newCommission = commissionInput.value;
                   if (newSalary && parseInt(newSalary) > 0) {
                     handleEditSalary(editingEmployee.id, newSalary);
-                  } else {
-                    alert('Please enter a valid salary amount');
+                  }
+                  if (newCommission && parseInt(newCommission) >= 0) {
+                    handleEditCommission(editingEmployee.id, newCommission);
                   }
                 }}
               >

@@ -21,17 +21,28 @@
 /* ===== LOGO SECTION ===== */
 .login-logo {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .login-logo-img {
   width: 100%;
-  max-width: 160px;
+  max-width: 140px;
   height: auto;
   aspect-ratio: 1/1;
   object-fit: contain;
   margin: 0 auto 0.5rem auto;
   display: block;
+}
+
+.brand-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0A1628;
+  margin: 0;
+}
+
+.brand-title span {
+  color: #C9A84C;
 }
 
 .logo-subtitle {
@@ -40,6 +51,108 @@
   letter-spacing: 2px;
   margin: 0;
   text-transform: uppercase;
+}
+
+/* ===== STEP 1: BRANCH SELECTION ===== */
+.step-branch {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.step-title {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0A1628;
+  margin-bottom: 0.25rem;
+}
+
+.step-hint {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.branch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.branch-card {
+  padding: 1.5rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.branch-card:hover {
+  border-color: #C9A84C;
+  background: rgba(201, 168, 76, 0.04);
+}
+
+.branch-card.selected {
+  border-color: #C9A84C;
+  background: rgba(201, 168, 76, 0.08);
+  box-shadow: 0 0 20px rgba(201, 168, 76, 0.15);
+}
+
+.branch-card .branch-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.branch-card h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0A1628;
+  margin: 0;
+}
+
+.branch-card p {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0.15rem 0 0 0;
+}
+
+/* ===== STEP 2: LOGIN FORM ===== */
+.selected-branch-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: #f0fdf4;
+  border-radius: 0.75rem;
+  border: 1px solid #bbf7d0;
+  margin-bottom: 1.25rem;
+}
+
+.branch-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #065f46;
+}
+
+.change-branch-btn {
+  padding: 0.15rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #6b7280;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.change-branch-btn:hover {
+  background: #f3f4f6;
 }
 
 /* ===== FORM ===== */
@@ -77,25 +190,19 @@
   color: #9ca3af;
 }
 
-/* ===== BRANCH INFO FOR ADMIN ===== */
-.branch-info {
-  margin-bottom: 1.25rem;
+/* ===== LOGIN ERROR ===== */
+.login-error {
+  background: #fef2f2;
+  color: #dc2626;
   padding: 0.5rem 0.75rem;
-  background: rgba(30, 27, 75, 0.06);
-  border-radius: 0.75rem;
-  border: 1px solid rgba(30, 27, 75, 0.15);
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+  border: 1px solid #fca5a5;
+  text-align: center;
 }
 
-.branch-info .info-badge {
-  background: #1E1B4B;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-/* ===== LOGIN BUTTON - LOGO MATCHING NAVY, PERMANENT COLOR ===== */
+/* ===== LOGIN BUTTON ===== */
 .login-btn,
 .login-btn:hover,
 .login-btn:focus,
@@ -128,6 +235,68 @@
   background-color: #1E1B4B !important;
 }
 
+/* ===== CREDENTIALS HINT - UPDATED ===== */
+.credentials-hint {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
+.hint-title {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.hint-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0.3rem;
+}
+
+.hint-item {
+  text-align: center;
+  padding: 0.25rem 0.2rem;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #f3f4f6;
+}
+
+.hint-item strong {
+  display: block;
+  font-size: 0.6rem;
+  color: #1E1B4B;
+}
+
+.hint-item span {
+  display: block;
+  font-size: 0.5rem;
+  color: #6b7280;
+  word-break: break-all;
+}
+
+/* ===== ROLE BADGE COLORS ===== */
+.role-badge-admin {
+  background: #1E1B4B;
+  color: white;
+}
+
+.role-badge-manager {
+  background: #C9A84C;
+  color: white;
+}
+
+.role-badge-employee {
+  background: #3B82F6;
+  color: white;
+}
+
 /* ===== FOOTER ===== */
 .login-footer {
   text-align: center;
@@ -143,6 +312,29 @@
   }
 
   .login-logo-img {
-    max-width: 120px;
+    max-width: 100px;
+  }
+  
+  .brand-title {
+    font-size: 1.2rem;
+  }
+  
+  .hint-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem;
+  }
+  
+  .branch-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .branch-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .hint-grid {
+    grid-template-columns: 1fr;
   }
 }

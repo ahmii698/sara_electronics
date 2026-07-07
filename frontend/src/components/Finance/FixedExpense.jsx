@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, DollarSign, X, CheckCircle, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Edit, Trash2, Eye, DollarSign, X, Calendar, Clock, Building, CreditCard } from 'lucide-react';
 import './FixedExpense.css';
 
 const FixedExpense = () => {
@@ -10,9 +10,21 @@ const FixedExpense = () => {
   const [editingExpense, setEditingExpense] = useState(null);
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [userBranch, setUserBranch] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const itemsPerPage = 10;
 
+  // ===== GET USER DATA =====
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      setUserRole(user.role);
+      setUserBranch(user.branch);
+    }
+  }, []);
+
   const [expenses, setExpenses] = useState([
+    // ===== BRANCH 1 EXPENSES =====
     { 
       id: 1, 
       name: 'Rent', 
@@ -31,7 +43,7 @@ const FixedExpense = () => {
       id: 2, 
       name: 'Electricity Bill', 
       amount: 15000, 
-      branch: 2, 
+      branch: 1, 
       dueDate: '15th of every month',
       paid: false,
       lastPaid: '2026-05-15',
@@ -54,6 +66,70 @@ const FixedExpense = () => {
         { date: '2026-04-20 10:30 AM', amount: 5000, status: 'Paid' },
       ]
     },
+    // ===== BRANCH 2 EXPENSES =====
+    { 
+      id: 4, 
+      name: 'Rent', 
+      amount: 35000, 
+      branch: 2, 
+      dueDate: '1st of every month',
+      paid: true,
+      lastPaid: '2026-06-01',
+      history: [
+        { date: '2026-06-01 09:00 AM', amount: 35000, status: 'Paid' },
+        { date: '2026-05-01 10:00 AM', amount: 35000, status: 'Paid' },
+      ]
+    },
+    { 
+      id: 5, 
+      name: 'Electricity Bill', 
+      amount: 12000, 
+      branch: 2, 
+      dueDate: '15th of every month',
+      paid: false,
+      lastPaid: '2026-05-15',
+      history: [
+        { date: '2026-05-15 11:30 AM', amount: 12000, status: 'Paid' },
+        { date: '2026-04-15 09:45 AM', amount: 12000, status: 'Paid' },
+      ]
+    },
+    { 
+      id: 6, 
+      name: 'Internet', 
+      amount: 4000, 
+      branch: 2, 
+      dueDate: '20th of every month',
+      paid: false,
+      lastPaid: '2026-05-20',
+      history: [
+        { date: '2026-05-20 10:15 AM', amount: 4000, status: 'Paid' },
+        { date: '2026-04-20 11:30 AM', amount: 4000, status: 'Paid' },
+      ]
+    },
+    { 
+      id: 7, 
+      name: 'Security', 
+      amount: 8000, 
+      branch: 1, 
+      dueDate: '30th of every month',
+      paid: false,
+      lastPaid: '2026-05-30',
+      history: [
+        { date: '2026-05-30 05:00 PM', amount: 8000, status: 'Paid' },
+      ]
+    },
+    { 
+      id: 8, 
+      name: 'Cleaning', 
+      amount: 6000, 
+      branch: 2, 
+      dueDate: '25th of every month',
+      paid: false,
+      lastPaid: '2026-05-25',
+      history: [
+        { date: '2026-05-25 08:00 AM', amount: 6000, status: 'Paid' },
+      ]
+    },
   ]);
 
   const [newExpense, setNewExpense] = useState({
@@ -65,9 +141,18 @@ const FixedExpense = () => {
 
   const [payAmount, setPayAmount] = useState('');
 
-  const filtered = expenses.filter(e => 
-    e.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // ===== FILTER - STRICT BRANCH WISE =====
+  const filtered = expenses.filter(e => {
+    const searchMatch = e.name.toLowerCase().includes(search.toLowerCase());
+    
+    // STRICT: Sirf user ki branch ke expenses dikhao
+    let branchMatch = true;
+    if (userBranch) {
+      branchMatch = e.branch === parseInt(userBranch);
+    }
+    
+    return searchMatch && branchMatch;
+  });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -88,12 +173,15 @@ const FixedExpense = () => {
       return;
     }
 
+    // Always use user's branch
+    const branch = userBranch ? parseInt(userBranch) : 1;
+
     const newId = expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1;
     setExpenses([...expenses, {
       id: newId,
       name: newExpense.name,
       amount: parseInt(newExpense.amount),
-      branch: parseInt(newExpense.branch),
+      branch: branch,
       dueDate: newExpense.dueDate,
       paid: false,
       lastPaid: 'Never',
@@ -117,7 +205,7 @@ const FixedExpense = () => {
           ...e,
           name: newExpense.name,
           amount: parseInt(newExpense.amount),
-          branch: parseInt(newExpense.branch),
+          branch: userBranch ? parseInt(userBranch) : parseInt(newExpense.branch),
           dueDate: newExpense.dueDate,
         };
       }
@@ -150,7 +238,7 @@ const FixedExpense = () => {
           paid: true,
           lastPaid: dateTime,
           history: newHistory,
-          amount: amount // Update amount if changed
+          amount: amount
         };
       }
       return e;
@@ -171,7 +259,12 @@ const FixedExpense = () => {
   // ===== OPEN MODALS =====
   const openAddModal = () => {
     setEditingExpense(null);
-    setNewExpense({ name: '', amount: '', branch: 1, dueDate: '' });
+    setNewExpense({ 
+      name: '', 
+      amount: '', 
+      branch: userBranch ? parseInt(userBranch) : 1, 
+      dueDate: '' 
+    });
     setShowModal(true);
   };
 
@@ -218,27 +311,61 @@ const FixedExpense = () => {
     return parts.slice(1).join(' ');
   };
 
+  // ===== TOTALS (Filtered - Only User Branch) =====
+  const totalExpenses = filtered.length;
+  const totalPaid = filtered.filter(e => e.paid).length;
+  const totalPending = filtered.filter(e => !e.paid).length;
+  const totalAmount = filtered.reduce((sum, e) => sum + e.amount, 0);
+
+  const branchLabel = userBranch ? `Branch ${userBranch}` : 'All Branches';
+
   return (
     <div className="fixed-expense-container">
       <div className="expense-header">
-        <h3>Fixed Expenses</h3>
+        <div className="header-left">
+          <h3>Fixed Expenses</h3>
+          <div className="branch-label">
+            <Building size={14} />
+            <span>{branchLabel}</span>
+          </div>
+          <div className="header-stats">
+            <span className="stat-chip">
+              <Building size={14} />
+              {totalExpenses} Expenses
+            </span>
+            <span className="stat-chip paid-stat">
+              <span className="dot paid"></span>
+              {totalPaid} Paid
+            </span>
+            <span className="stat-chip pending-stat">
+              <span className="dot pending"></span>
+              {totalPending} Pending
+            </span>
+            <span className="stat-chip">
+              <DollarSign size={14} />
+              PKR {totalAmount.toLocaleString()}
+            </span>
+          </div>
+        </div>
         <button className="btn-accent" onClick={openAddModal}>
           <Plus size={18} />
           Add Fixed Expense
         </button>
       </div>
 
-      <div className="expense-search">
-        <Search size={18} className="search-icon" />
-        <input
-          type="text"
-          placeholder="Search expenses..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
+      <div className="expense-controls">
+        <div className="expense-search">
+          <Search size={18} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search expenses..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
       </div>
 
       <div className="expense-table-wrap">
@@ -248,7 +375,7 @@ const FixedExpense = () => {
               <th>#</th>
               <th>Expense Name</th>
               <th>Branch</th>
-              <th>Amount (₹)</th>
+              <th>Amount (PKR)</th>
               <th>Due Date</th>
               <th>Status</th>
               <th>Last Paid</th>
@@ -258,22 +385,22 @@ const FixedExpense = () => {
           <tbody>
             {currentItems.length === 0 ? (
               <tr>
-                <td colSpan="8" className="no-data">No expenses found</td>
+                <td colSpan="8" className="no-data">No expenses found for {branchLabel}</td>
               </tr>
             ) : (
               currentItems.map((exp, index) => (
                 <tr key={exp.id}>
-                  <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                  <td className="font-medium">{exp.name}</td>
-                  <td><span className="branch-badge">Branch {exp.branch}</span></td>
-                  <td>₹{exp.amount.toLocaleString()}</td>
-                  <td>{exp.dueDate}</td>
+                  <td className="text-gray">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                  <td className="expense-name">{exp.name}</td>
+                  <td><span className={`branch-badge branch-${exp.branch}`}>Branch {exp.branch}</span></td>
+                  <td className="amount-cell">PKR {exp.amount.toLocaleString()}</td>
+                  <td><span className="due-date-badge">{exp.dueDate}</span></td>
                   <td>
                     <span className={exp.paid ? 'badge-active' : 'badge-pending'}>
                       {exp.paid ? 'Paid' : 'Pending'}
                     </span>
                   </td>
-                  <td>{exp.lastPaid || 'Never'}</td>
+                  <td className="last-paid">{exp.lastPaid || 'Never'}</td>
                   <td>
                     <div className="action-group">
                       <button 
@@ -336,7 +463,10 @@ const FixedExpense = () => {
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editingExpense ? 'Edit Fixed Expense' : 'Add Fixed Expense'}</h3>
+              <div className="modal-header-left">
+                <CreditCard size={20} className="modal-icon" />
+                <h3>{editingExpense ? 'Edit Fixed Expense' : 'Add Fixed Expense'}</h3>
+              </div>
               <button className="modal-close" onClick={closeModal}>
                 <X size={24} />
               </button>
@@ -355,7 +485,7 @@ const FixedExpense = () => {
               </div>
 
               <div className="form-group">
-                <label>Amount (₹) *</label>
+                <label>Amount (PKR) *</label>
                 <input
                   type="number"
                   className="form-input"
@@ -372,10 +502,15 @@ const FixedExpense = () => {
                     className="form-input"
                     value={newExpense.branch}
                     onChange={(e) => setNewExpense({ ...newExpense, branch: parseInt(e.target.value) })}
+                    disabled={!!userBranch}
+                    style={userBranch ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
                   >
                     <option value={1}>Branch 1</option>
                     <option value={2}>Branch 2</option>
                   </select>
+                  {userBranch && (
+                    <small className="field-hint">Branch locked to {branchLabel}</small>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -406,7 +541,10 @@ const FixedExpense = () => {
         <div className="modal-overlay" onClick={() => setShowPayModal(false)}>
           <div className="modal-content pay-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>💰 Pay - {selectedExpense.name}</h3>
+              <div className="modal-header-left">
+                <DollarSign size={20} className="modal-icon" />
+                <h3>Pay - {selectedExpense.name}</h3>
+              </div>
               <button className="modal-close" onClick={() => setShowPayModal(false)}>
                 <X size={24} />
               </button>
@@ -420,7 +558,7 @@ const FixedExpense = () => {
                 </div>
                 <div className="pay-info-row">
                   <span>Original Amount:</span>
-                  <strong>₹{selectedExpense.amount.toLocaleString()}</strong>
+                  <strong>PKR {selectedExpense.amount.toLocaleString()}</strong>
                 </div>
                 <div className="pay-info-row">
                   <span>Due Date:</span>
@@ -429,7 +567,7 @@ const FixedExpense = () => {
               </div>
 
               <div className="form-group">
-                <label>Pay Amount (₹) *</label>
+                <label>Pay Amount (PKR) *</label>
                 <input
                   type="number"
                   className="form-input"
@@ -441,7 +579,7 @@ const FixedExpense = () => {
               </div>
 
               <div className="pay-note">
-                <span>✓</span>
+                <span className="pay-icon">ⓘ</span>
                 <p>This payment will be recorded with current date & time</p>
               </div>
             </div>
@@ -461,7 +599,10 @@ const FixedExpense = () => {
         <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
           <div className="modal-content history-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>📋 Payment History - {selectedExpense.name}</h3>
+              <div className="modal-header-left">
+                <Clock size={20} className="modal-icon" />
+                <h3>Payment History - {selectedExpense.name}</h3>
+              </div>
               <button className="modal-close" onClick={() => setShowHistoryModal(false)}>
                 <X size={24} />
               </button>
@@ -471,7 +612,7 @@ const FixedExpense = () => {
               <div className="history-summary">
                 <div className="summary-item">
                   <span>Total Paid</span>
-                  <strong>₹{selectedExpense.history.reduce((sum, h) => sum + h.amount, 0).toLocaleString()}</strong>
+                  <strong>PKR {selectedExpense.history.reduce((sum, h) => sum + h.amount, 0).toLocaleString()}</strong>
                 </div>
                 <div className="summary-item">
                   <span>Total Payments</span>
@@ -499,8 +640,8 @@ const FixedExpense = () => {
                         </span>
                       </div>
                       <div className="history-right">
-                        <span className="history-amount">₹{item.amount.toLocaleString()}</span>
-                        <span className="history-status paid">✓ Paid</span>
+                        <span className="history-amount">PKR {item.amount.toLocaleString()}</span>
+                        <span className="history-status paid">Paid</span>
                       </div>
                     </div>
                   ))

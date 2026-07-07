@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, X, Package, Tag, DollarSign, Layers } from 'lucide-react';
 import './Inventory.css';
 
 const Inventory = () => {
@@ -49,7 +49,6 @@ const Inventory = () => {
     }
 
     if (editingProduct) {
-      // Edit existing product
       setProducts(products.map(p => 
         p.id === editingProduct.id 
           ? { 
@@ -62,7 +61,6 @@ const Inventory = () => {
           : p
       ));
     } else {
-      // Add new product
       const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
       setProducts([...products, {
         id: newId,
@@ -105,13 +103,28 @@ const Inventory = () => {
     }
   };
 
-  // ===== CATEGORIES FOR DROPDOWN =====
   const categories = ['TV', 'Audio', 'Appliances', 'Computers', 'Mobile', 'Furniture', 'Other'];
+
+  // ===== TOTAL STOCK VALUE =====
+  const totalStockValue = products.reduce((sum, p) => sum + (p.stock * p.price), 0);
+  const totalProducts = products.length;
 
   return (
     <div className="inventory-container">
       <div className="inventory-header">
-        <h2>Inventory</h2>
+        <div className="header-left">
+          <h2>Inventory Management</h2>
+          <div className="header-stats">
+            <span className="stat-chip">
+              <Package size={14} />
+              {totalProducts} Products
+            </span>
+            <span className="stat-chip">
+              <DollarSign size={14} />
+              PKR {totalStockValue.toLocaleString()}
+            </span>
+          </div>
+        </div>
         <button className="btn-accent" onClick={openAddModal}>
           <Plus size={20} />
           Add Product
@@ -144,27 +157,29 @@ const Inventory = () => {
                 <th>Product Name</th>
                 <th>Category</th>
                 <th>Stock</th>
-                <th>Price (₹)</th>
+                <th>Price (PKR)</th>
+                <th>Total Value</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {currentItems.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="no-data">No products found</td>
+                  <td colSpan="7" className="no-data">No products found</td>
                 </tr>
               ) : (
                 currentItems.map((product, index) => (
                   <tr key={product.id}>
                     <td className="text-gray-500">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td className="font-medium">{product.name}</td>
+                    <td className="product-name">{product.name}</td>
                     <td><span className="category-badge">{product.category}</span></td>
                     <td>
-                      <span className={product.stock < 10 ? 'stock-low' : ''}>
+                      <span className={product.stock < 10 ? 'stock-low' : 'stock-normal'}>
                         {product.stock}
                       </span>
                     </td>
-                    <td>₹{product.price.toLocaleString()}</td>
+                    <td>PKR {product.price.toLocaleString()}</td>
+                    <td>PKR {(product.stock * product.price).toLocaleString()}</td>
                     <td>
                       <div className="action-btns">
                         <button className="edit" onClick={() => openEditModal(product)}>
@@ -212,7 +227,10 @@ const Inventory = () => {
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
+              <div className="modal-header-left">
+                <Tag size={20} className="modal-icon" />
+                <h3>{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
+              </div>
               <button className="modal-close" onClick={closeModal}>
                 <X size={24} />
               </button>
@@ -221,27 +239,33 @@ const Inventory = () => {
             <div className="modal-body">
               <div className="form-group">
                 <label>Product Name *</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Enter product name"
-                  value={newProduct.name}
-                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                />
+                <div className="input-with-icon">
+                  <Package size={18} />
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Enter product name"
+                    value={newProduct.name}
+                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                  />
+                </div>
               </div>
 
               <div className="form-group">
                 <label>Category *</label>
-                <select
-                  className="form-input"
-                  value={newProduct.category}
-                  onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                >
-                  <option value="">Select Category...</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                <div className="input-with-icon">
+                  <Layers size={18} />
+                  <select
+                    className="form-input"
+                    value={newProduct.category}
+                    onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                  >
+                    <option value="">Select Category...</option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="form-row">
@@ -257,14 +281,17 @@ const Inventory = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Price (₹) *</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="0"
-                    value={newProduct.price}
-                    onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                  />
+                  <label>Price (PKR) *</label>
+                  <div className="input-with-icon">
+                    <DollarSign size={18} />
+                    <input
+                      type="number"
+                      className="form-input"
+                      placeholder="0"
+                      value={newProduct.price}
+                      onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

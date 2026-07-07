@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { UserPlus, Mail, Phone, MapPin, Briefcase } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { UserPlus, Mail, Phone, MapPin, Briefcase, DollarSign, Lock, User, Building, Upload, X, CreditCard, FileText } from 'lucide-react';
 import './AddEmployee.css';
 
 const AddEmployee = () => {
@@ -13,18 +13,137 @@ const AddEmployee = () => {
     confirmPassword: '',
     address: '',
     salary: 0,
+    cnicFront: null,
+    cnicBack: null,
+    cnicFrontPreview: '',
+    cnicBackPreview: '',
+    agreement: null,
+    agreementPreview: '',
+    agreementName: '',
   });
+
+  const [errors, setErrors] = useState({});
+  const [userRole, setUserRole] = useState(null);
+  const [userBranch, setUserBranch] = useState(null);
+
+  const cnicFrontRef = useRef(null);
+  const cnicBackRef = useRef(null);
+  const agreementRef = useRef(null);
+
+  // ===== GET USER ROLE AND BRANCH =====
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      setUserRole(user.role);
+      setUserBranch(user.branch);
+      if (user.branch) {
+        setEmployee(prev => ({ ...prev, branch: parseInt(user.branch) }));
+      }
+    }
+  }, []);
+
+  // ===== HANDLE CNIC FILE UPLOAD =====
+  const handleCnicUpload = (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (type === 'front') {
+        setEmployee({ ...employee, cnicFront: file, cnicFrontPreview: reader.result });
+      } else if (type === 'back') {
+        setEmployee({ ...employee, cnicBack: file, cnicBackPreview: reader.result });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // ===== HANDLE AGREEMENT UPLOAD =====
+  const handleAgreementUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setEmployee({
+        ...employee,
+        agreement: file,
+        agreementPreview: reader.result,
+        agreementName: file.name,
+      });
+    };
+    reader.readAsDataURL(file);
+    if (agreementRef.current) agreementRef.current.value = '';
+  };
+
+  // ===== REMOVE CNIC FILE =====
+  const removeCnicFile = (type) => {
+    if (type === 'front') {
+      setEmployee({ ...employee, cnicFront: null, cnicFrontPreview: '' });
+      if (cnicFrontRef.current) cnicFrontRef.current.value = '';
+    } else if (type === 'back') {
+      setEmployee({ ...employee, cnicBack: null, cnicBackPreview: '' });
+      if (cnicBackRef.current) cnicBackRef.current.value = '';
+    }
+  };
+
+  // ===== REMOVE AGREEMENT FILE =====
+  const removeAgreement = () => {
+    setEmployee({ ...employee, agreement: null, agreementPreview: '', agreementName: '' });
+    if (agreementRef.current) agreementRef.current.value = '';
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    if (name === 'branch' && userBranch) {
+      return;
+    }
+    
+    setEmployee({ ...employee, [name]: value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    const newErrors = {};
+    if (!employee.name) newErrors.name = 'Name is required';
+    if (!employee.email) newErrors.email = 'Email is required';
+    if (!employee.phone) newErrors.phone = 'Phone is required';
+    if (!employee.password) newErrors.password = 'Password is required';
+    if (employee.password !== employee.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    if (!employee.cnicFront) newErrors.cnicFront = 'CNIC Front image is required';
+    if (!employee.cnicBack) newErrors.cnicBack = 'CNIC Back image is required';
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
     console.log('Employee Created:', employee);
+    alert('Employee created successfully!');
+    setErrors({});
   };
+
+  const isAdmin = userRole === 'admin';
+  const isManager = userRole === 'manager';
+  const branchLabel = userBranch ? `Branch ${userBranch}` : 'All Branches';
 
   return (
     <div className="employee-form-container">
+      {userBranch && (
+        <div className="branch-info">
+          <span className="branch-badge">
+            📍 {branchLabel}
+          </span>
+        </div>
+      )}
+
       <div className="form-header">
         <div className="icon-wrapper">
-          <UserPlus className="icon-gold" size={28} />
+          <UserPlus className="icon-primary" size={28} />
         </div>
         <h2>Add New Employee</h2>
       </div>
@@ -34,16 +153,18 @@ const AddEmployee = () => {
           <div className="form-group">
             <label>Full Name *</label>
             <div className="input-with-icon">
-              <Briefcase size={18} />
+              <User size={18} />
               <input
                 type="text"
-                className="form-input"
+                name="name"
+                className={`form-input ${errors.name ? 'error' : ''}`}
                 placeholder="Enter employee name"
                 value={employee.name}
-                onChange={(e) => setEmployee({ ...employee, name: e.target.value })}
+                onChange={handleChange}
                 required
               />
             </div>
+            {errors.name && <span className="error-text">{errors.name}</span>}
           </div>
 
           <div className="form-group">
@@ -52,13 +173,15 @@ const AddEmployee = () => {
               <Mail size={18} />
               <input
                 type="email"
-                className="form-input"
+                name="email"
+                className={`form-input ${errors.email ? 'error' : ''}`}
                 placeholder="employee@company.com"
                 value={employee.email}
-                onChange={(e) => setEmployee({ ...employee, email: e.target.value })}
+                onChange={handleChange}
                 required
               />
             </div>
+            {errors.email && <span className="error-text">{errors.email}</span>}
           </div>
 
           <div className="form-group">
@@ -67,72 +190,185 @@ const AddEmployee = () => {
               <Phone size={18} />
               <input
                 type="tel"
-                className="form-input"
+                name="phone"
+                className={`form-input ${errors.phone ? 'error' : ''}`}
                 placeholder="03XX-XXXXXXX"
                 value={employee.phone}
-                onChange={(e) => setEmployee({ ...employee, phone: e.target.value })}
+                onChange={handleChange}
                 required
+              />
+            </div>
+            {errors.phone && <span className="error-text">{errors.phone}</span>}
+          </div>
+
+          <div className="form-group">
+            <label>Branch *</label>
+            <div className="input-with-icon">
+              <Building size={18} />
+              <select
+                name="branch"
+                className="form-input"
+                value={employee.branch}
+                onChange={handleChange}
+                disabled={!!userBranch}
+                style={userBranch ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
+              >
+                <option value={1}>Branch 1</option>
+                <option value={2}>Branch 2</option>
+              </select>
+            </div>
+            {userBranch && (
+              <small className="field-hint">Branch locked to {branchLabel}</small>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>Role *</label>
+            <div className="input-with-icon">
+              <Briefcase size={18} />
+              <select
+                name="role"
+                className="form-input"
+                value={employee.role}
+                onChange={handleChange}
+              >
+                <option value="employee">Employee</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Salary (PKR)</label>
+            <div className="input-with-icon">
+              <DollarSign size={18} />
+              <input
+                type="number"
+                name="salary"
+                className="form-input"
+                placeholder="0"
+                value={employee.salary}
+                onChange={handleChange}
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label>Branch *</label>
-            <select
-              className="form-input"
-              value={employee.branch}
-              onChange={(e) => setEmployee({ ...employee, branch: parseInt(e.target.value) })}
-            >
-              <option value={1}>Branch 1</option>
-              <option value={2}>Branch 2</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Role *</label>
-            <select
-              className="form-input"
-              value={employee.role}
-              onChange={(e) => setEmployee({ ...employee, role: e.target.value })}
-            >
-              <option value="employee">Employee</option>
-              <option value="manager">Manager</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Salary (₹)</label>
-            <input
-              type="number"
-              className="form-input"
-              placeholder="0"
-              value={employee.salary}
-              onChange={(e) => setEmployee({ ...employee, salary: parseInt(e.target.value) || 0 })}
-            />
-          </div>
-
-          <div className="form-group">
             <label>Password *</label>
-            <input
-              type="password"
-              className="form-input"
-              placeholder="••••••••"
-              value={employee.password}
-              onChange={(e) => setEmployee({ ...employee, password: e.target.value })}
-              required
-            />
+            <div className="input-with-icon">
+              <Lock size={18} />
+              <input
+                type="password"
+                name="password"
+                className={`form-input ${errors.password ? 'error' : ''}`}
+                placeholder="Enter password"
+                value={employee.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            {errors.password && <span className="error-text">{errors.password}</span>}
           </div>
 
           <div className="form-group">
             <label>Confirm Password *</label>
-            <input
-              type="password"
-              className="form-input"
-              placeholder="••••••••"
-              value={employee.confirmPassword}
-              onChange={(e) => setEmployee({ ...employee, confirmPassword: e.target.value })}
-              required
+            <div className="input-with-icon">
+              <Lock size={18} />
+              <input
+                type="password"
+                name="confirmPassword"
+                className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
+                placeholder="Confirm password"
+                value={employee.confirmPassword}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
+          </div>
+        </div>
+
+        {/* ===== CNIC IMAGES SECTION ===== */}
+        <div className="cnic-image-section">
+          <h4>CNIC Images *</h4>
+          <div className="cnic-image-grid">
+            <div className="image-upload-box">
+              <label>CNIC Front</label>
+              <div className="upload-area" onClick={() => cnicFrontRef.current?.click()}>
+                {employee.cnicFrontPreview ? (
+                  <div className="preview-container">
+                    <img src={employee.cnicFrontPreview} alt="CNIC Front" />
+                    <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeCnicFile('front'); }}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload size={32} />
+                    <span>Click to upload</span>
+                  </>
+                )}
+              </div>
+              <input type="file" ref={cnicFrontRef} accept="image/*" onChange={(e) => handleCnicUpload(e, 'front')} style={{ display: 'none' }} />
+              {errors.cnicFront && <span className="error-text">{errors.cnicFront}</span>}
+            </div>
+
+            <div className="image-upload-box">
+              <label>CNIC Back</label>
+              <div className="upload-area" onClick={() => cnicBackRef.current?.click()}>
+                {employee.cnicBackPreview ? (
+                  <div className="preview-container">
+                    <img src={employee.cnicBackPreview} alt="CNIC Back" />
+                    <button className="remove-btn" onClick={(e) => { e.stopPropagation(); removeCnicFile('back'); }}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload size={32} />
+                    <span>Click to upload</span>
+                  </>
+                )}
+              </div>
+              <input type="file" ref={cnicBackRef} accept="image/*" onChange={(e) => handleCnicUpload(e, 'back')} style={{ display: 'none' }} />
+              {errors.cnicBack && <span className="error-text">{errors.cnicBack}</span>}
+            </div>
+          </div>
+        </div>
+
+        {/* ===== AGREEMENT UPLOAD SECTION ===== */}
+        <div className="agreement-section">
+          <h4>Agreement Form <span className="optional-badge">Optional</span></h4>
+          <p className="agreement-hint">Upload signed agreement form (PDF, JPG, PNG, etc.)</p>
+          
+          <div className="agreement-upload">
+            <div className="upload-area agreement-upload-area" onClick={() => agreementRef.current?.click()}>
+              {employee.agreementPreview ? (
+                <div className="agreement-preview">
+                  <FileText size={32} className="agreement-icon" />
+                  <span className="agreement-file-name">{employee.agreementName}</span>
+                  <button 
+                    className="remove-agreement-btn" 
+                    onClick={(e) => { e.stopPropagation(); removeAgreement(); }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <FileText size={32} />
+                  <span>Click to upload agreement</span>
+                  <span className="file-hint">PDF, JPG, PNG (Max 5MB)</span>
+                </>
+              )}
+            </div>
+            <input 
+              type="file" 
+              ref={agreementRef} 
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" 
+              onChange={handleAgreementUpload} 
+              style={{ display: 'none' }} 
             />
           </div>
         </div>
@@ -142,10 +378,11 @@ const AddEmployee = () => {
           <div className="input-with-icon">
             <MapPin size={18} />
             <textarea
+              name="address"
               className="form-input form-textarea"
               placeholder="Enter employee address"
               value={employee.address}
-              onChange={(e) => setEmployee({ ...employee, address: e.target.value })}
+              onChange={handleChange}
             />
           </div>
         </div>
@@ -154,7 +391,27 @@ const AddEmployee = () => {
           <button type="submit" className="btn-primary">
             Create Employee Account
           </button>
-          <button type="reset" className="btn-reset">
+          <button type="reset" className="btn-reset" onClick={() => {
+            setEmployee({
+              name: '',
+              email: '',
+              phone: '',
+              branch: userBranch ? parseInt(userBranch) : 1,
+              role: 'employee',
+              password: '',
+              confirmPassword: '',
+              address: '',
+              salary: 0,
+              cnicFront: null,
+              cnicBack: null,
+              cnicFrontPreview: '',
+              cnicBackPreview: '',
+              agreement: null,
+              agreementPreview: '',
+              agreementName: '',
+            });
+            setErrors({});
+          }}>
             Clear
           </button>
         </div>

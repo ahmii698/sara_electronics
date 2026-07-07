@@ -5,6 +5,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* ===== HEADER ===== */
 .salary-header {
   display: flex;
   justify-content: space-between;
@@ -14,12 +15,83 @@
   margin-bottom: 1.5rem;
 }
 
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .salary-header h3 {
   font-size: 1.125rem;
   font-weight: 700;
   color: #0A1628;
+  margin: 0;
 }
 
+.branch-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  padding: 0.15rem 0.6rem;
+  background: #f3f4f6;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.branch-label svg {
+  color: #C9A84C;
+}
+
+.header-stats {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+}
+
+.stat-chip .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.stat-chip .dot.paid {
+  background: #22c55e;
+}
+
+.stat-chip .dot.pending {
+  background: #f59e0b;
+}
+
+.stat-chip.paid-stat {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.stat-chip.pending-stat {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.stat-chip.commission-stat {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* ===== SEARCH ===== */
 .salary-search {
   display: flex;
   align-items: center;
@@ -28,6 +100,12 @@
   padding: 0 0.75rem;
   margin-bottom: 1rem;
   max-width: 300px;
+  transition: all 0.3s;
+}
+
+.salary-search:focus-within {
+  border-color: #C9A84C;
+  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.2);
 }
 
 .salary-search .search-icon {
@@ -40,8 +118,10 @@
   outline: none;
   width: 100%;
   font-size: 0.9rem;
+  background: transparent;
 }
 
+/* ===== TABLE ===== */
 .salary-table {
   overflow-x: auto;
 }
@@ -54,12 +134,13 @@
 .salary-table th {
   padding: 0.75rem 1rem;
   text-align: left;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
   color: #6b7280;
   background: #f8f9fa;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 2px solid #e5e7eb;
+  letter-spacing: 0.5px;
 }
 
 .salary-table td {
@@ -71,32 +152,66 @@
 }
 
 .salary-table tr:hover td {
-  background: #f9fafb;
+  background: #fafafa;
+}
+
+.salary-table tr:last-child td {
+  border-bottom: none;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem !important;
+  color: #9ca3af !important;
 }
 
 /* ===== BADGES ===== */
 .badge-active {
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  background: #d4edda;
-  color: #155724;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .badge-pending {
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   background: #fef3c7;
   color: #92400e;
 }
 
-.advance-badge {
-  padding: 0.2rem 0.6rem;
+.branch-badge {
+  background: rgba(201, 168, 76, 0.12);
+  color: #C9A84C;
+  padding: 0.15rem 0.5rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.employee-name {
+  font-weight: 600;
+  color: #0A1628;
+}
+
+.salary-amount {
+  font-weight: 600;
+  color: #0A1628;
+}
+
+.last-paid {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.advance-badge {
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
   font-weight: 600;
   background: #fef3c7;
   color: #92400e;
@@ -105,6 +220,39 @@
 .no-advance {
   font-size: 0.75rem;
   color: #9ca3af;
+}
+
+/* ===== COMMISSION BADGES ===== */
+.commission-amount {
+  font-weight: 600;
+  color: #0A1628;
+}
+
+.commission-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.no-commission {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.account-badge {
+  background: #f3e8ff;
+  color: #6b21a8;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.commission-highlight {
+  color: #1e40af;
 }
 
 /* ===== ACTION BUTTONS ===== */
@@ -125,6 +273,10 @@
   display: flex;
   align-items: center;
   gap: 0.2rem;
+}
+
+.action-group button:hover {
+  transform: scale(1.05);
 }
 
 .btn-view {
@@ -172,7 +324,7 @@
   background: #fca5a5;
 }
 
-/* ===== MODAL - HISTORY ===== */
+/* ===== MODAL - OVERLAY ===== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -196,7 +348,7 @@
 .modal-content {
   background: white;
   border-radius: 1.25rem;
-  max-width: 600px;
+  max-width: 620px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
@@ -210,15 +362,15 @@
 }
 
 .history-modal {
-  max-width: 620px;
+  max-width: 640px;
 }
 
 .edit-modal {
-  max-width: 420px;
+  max-width: 440px;
 }
 
 .advance-modal {
-  max-width: 440px;
+  max-width: 460px;
 }
 
 .modal-header {
@@ -226,13 +378,24 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-icon {
+  color: #C9A84C;
 }
 
 .modal-header h3 {
   font-size: 1.125rem;
   font-weight: 700;
   color: #0A1628;
+  margin: 0;
 }
 
 .modal-close {
@@ -271,7 +434,7 @@
 
 .summary-item span {
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -294,7 +457,7 @@
 }
 
 .advances-section h4 {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #92400e;
   margin-bottom: 0.75rem;
@@ -311,7 +474,7 @@
 
 .advances-table th {
   text-align: left;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   color: #6b7280;
   padding: 0.4rem 0.4rem;
@@ -341,7 +504,7 @@
 }
 
 .adv-time {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: #6b7280;
 }
 
@@ -351,10 +514,10 @@
 }
 
 .advance-reason-cell {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #6b7280;
-  background: rgba(0,0,0,0.03);
-  padding: 0.15rem 0.5rem;
+  background: rgba(0,0,0,0.04);
+  padding: 0.1rem 0.5rem;
   border-radius: 9999px;
   display: inline-block;
 }
@@ -362,19 +525,19 @@
 .remaining-salary {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(0,0,0,0.1);
+  border-top: 1px solid rgba(0,0,0,0.08);
   text-align: right;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .remaining-salary strong {
   color: #0A1628;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
 /* ===== HISTORY LIST ===== */
 .history-list h4 {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #374151;
   margin-bottom: 0.75rem;
@@ -390,7 +553,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.6rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   border-bottom: 1px solid #f3f4f6;
   transition: all 0.2s;
 }
@@ -411,7 +574,7 @@
 }
 
 .history-date-full {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: #6b7280;
 }
 
@@ -428,7 +591,7 @@
 }
 
 .deducted-badge {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   color: #c62828;
   background: #fce4ec;
   padding: 0.1rem 0.4rem;
@@ -436,9 +599,17 @@
 }
 
 .history-status.paid {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: #065f46;
   background: #d1fae5;
+  padding: 0.1rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.history-status.commission {
+  font-size: 0.6rem;
+  color: #1e40af;
+  background: #dbeafe;
   padding: 0.1rem 0.5rem;
   border-radius: 9999px;
 }
@@ -478,8 +649,8 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.75rem;
-  color: #92400e;
-  background: #fef3c7;
+  color: #6b7280;
+  background: #f3f4f6;
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   margin-top: 0.75rem;
@@ -491,12 +662,13 @@
 
 .advance-icon {
   font-size: 1rem;
+  color: #C9A84C;
 }
 
 .btn-advance-save {
   padding: 0.6rem 1.5rem;
   border-radius: 0.75rem;
-  background: #c62828;
+  background: #0A1628;
   color: white;
   font-weight: 600;
   border: none;
@@ -505,9 +677,9 @@
 }
 
 .btn-advance-save:hover {
-  background: #b71c1c;
+  background: #1A2A4A;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(198, 40, 40, 0.3);
+  box-shadow: 0 4px 15px rgba(10, 22, 40, 0.3);
 }
 
 /* ===== EDIT FORM ===== */
@@ -545,7 +717,7 @@
 }
 
 .field-hint {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: #6b7280;
   margin-top: 0.15rem;
   display: block;
@@ -554,7 +726,7 @@
 /* ===== MODAL FOOTER ===== */
 .modal-footer {
   padding: 1rem 1.5rem 1.25rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 2px solid #f3f4f6;
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
@@ -578,7 +750,7 @@
 .btn-save {
   padding: 0.6rem 1.5rem;
   border-radius: 0.75rem;
-  background: #C9A84C;
+  background: #0A1628;
   color: white;
   font-weight: 600;
   border: none;
@@ -587,9 +759,9 @@
 }
 
 .btn-save:hover {
-  background: #b8973a;
+  background: #1A2A4A;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(201, 168, 76, 0.3);
+  box-shadow: 0 4px 15px rgba(10, 22, 40, 0.3);
 }
 
 /* ===== RESPONSIVE ===== */
@@ -605,7 +777,7 @@
   
   .action-group button {
     padding: 0.15rem 0.3rem;
-    font-size: 0.55rem;
+    font-size: 0.5rem;
   }
   
   .history-summary {
@@ -615,42 +787,13 @@
   .modal-content {
     width: 95%;
   }
-}
-
-/* Add these styles to your existing Salary.css */
-
-/* ===== ADVANCE MODAL - REASON FIELD ===== */
-.advance-modal .form-group {
-  margin-bottom: 1rem;
-}
-
-.advance-modal .form-group label {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.3rem;
-}
-
-.advance-modal .form-input {
-  width: 100%;
-  padding: 0.7rem 1rem;
-  border: 1.5px solid #d1d5db;
-  border-radius: 0.75rem;
-  outline: none;
-  font-size: 0.95rem;
-  transition: all 0.3s;
-  background: white;
-}
-
-.advance-modal .form-input:focus {
-  border-color: #C9A84C;
-  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
-}
-
-.field-hint {
-  font-size: 0.7rem;
-  color: #6b7280;
-  margin-top: 0.15rem;
-  display: block;
+  
+  .header-stats {
+    gap: 0.3rem;
+  }
+  
+  .stat-chip {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+  }
 }

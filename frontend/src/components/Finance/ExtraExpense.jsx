@@ -1,29 +1,49 @@
-import React, { useState } from 'react';
-import { Plus, Search, Edit, Trash2, X, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Edit, Trash2, X, Calendar, DollarSign, Building, Filter } from 'lucide-react';
 import './ExtraExpense.css';
 
 const ExtraExpense = () => {
   const [search, setSearch] = useState('');
-  const [branchFilter, setBranchFilter] = useState('all');
   const [monthFilter, setMonthFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [userBranch, setUserBranch] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const itemsPerPage = 10;
 
+  // ===== GET USER DATA =====
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      setUserRole(user.role);
+      setUserBranch(user.branch);
+    }
+  }, []);
+
   const [expenses, setExpenses] = useState([
+    // ===== BRANCH 1 EXPENSES =====
     { id: 1, description: 'Tea for staff', amount: 500, branch: 1, date: '2026-03-01' },
-    { id: 2, description: 'Pens and stationary', amount: 300, branch: 2, date: '2026-03-02' },
+    { id: 2, description: 'Pens and stationary', amount: 300, branch: 1, date: '2026-03-02' },
     { id: 3, description: 'Cleaning supplies', amount: 700, branch: 1, date: '2026-03-03' },
     { id: 4, description: 'Printer ink', amount: 1200, branch: 1, date: '2026-04-04' },
-    { id: 5, description: 'Office snacks', amount: 450, branch: 2, date: '2026-04-05' },
+    { id: 5, description: 'Office snacks', amount: 450, branch: 1, date: '2026-04-05' },
     { id: 6, description: 'Water bottles', amount: 300, branch: 1, date: '2026-05-06' },
-    { id: 7, description: 'Broom and dustpan', amount: 250, branch: 2, date: '2026-05-07' },
+    { id: 7, description: 'Broom and dustpan', amount: 250, branch: 1, date: '2026-05-07' },
     { id: 8, description: 'Notebooks', amount: 600, branch: 1, date: '2026-06-08' },
-    { id: 9, description: 'Printer paper', amount: 800, branch: 2, date: '2026-06-10' },
+    { id: 9, description: 'Printer paper', amount: 800, branch: 1, date: '2026-06-10' },
     { id: 10, description: 'Coffee supplies', amount: 350, branch: 1, date: '2026-06-12' },
-    { id: 11, description: 'Desk lamp', amount: 450, branch: 2, date: '2026-07-01' },
+    { id: 11, description: 'Desk lamp', amount: 450, branch: 1, date: '2026-07-01' },
     { id: 12, description: 'Extension board', amount: 200, branch: 1, date: '2026-07-03' },
+    // ===== BRANCH 2 EXPENSES =====
+    { id: 13, description: 'Tea for staff B2', amount: 400, branch: 2, date: '2026-03-01' },
+    { id: 14, description: 'Stationary B2', amount: 250, branch: 2, date: '2026-03-05' },
+    { id: 15, description: 'Cleaning B2', amount: 600, branch: 2, date: '2026-04-02' },
+    { id: 16, description: 'Printer ink B2', amount: 1000, branch: 2, date: '2026-04-10' },
+    { id: 17, description: 'Snacks B2', amount: 350, branch: 2, date: '2026-05-03' },
+    { id: 18, description: 'Water B2', amount: 200, branch: 2, date: '2026-05-08' },
+    { id: 19, description: 'Notebooks B2', amount: 500, branch: 2, date: '2026-06-05' },
+    { id: 20, description: 'Paper B2', amount: 700, branch: 2, date: '2026-06-12' },
   ]);
 
   const [newExpense, setNewExpense] = useState({
@@ -33,11 +53,12 @@ const ExtraExpense = () => {
     date: '',
   });
 
-  // ===== GET UNIQUE MONTHS =====
+  // ===== GET UNIQUE MONTHS (Filtered) =====
   const getUniqueMonths = () => {
     const months = new Set();
-    expenses.forEach(exp => {
-      const month = exp.date.substring(0, 7); // YYYY-MM
+    const filteredExpenses = userBranch ? expenses.filter(e => e.branch === parseInt(userBranch)) : expenses;
+    filteredExpenses.forEach(exp => {
+      const month = exp.date.substring(0, 7);
       months.add(month);
     });
     return Array.from(months).sort();
@@ -53,16 +74,15 @@ const ExtraExpense = () => {
 
   // ===== FILTER LOGIC =====
   const filtered = expenses.filter(e => {
-    // Search filter
     const searchMatch = e.description.toLowerCase().includes(search.toLowerCase()) ||
       e.amount.toString().includes(search);
     
-    // Branch filter
+    // STRICT: Sirf user ki branch ke expenses
     let branchMatch = true;
-    if (branchFilter === '1') branchMatch = e.branch === 1;
-    else if (branchFilter === '2') branchMatch = e.branch === 2;
+    if (userBranch) {
+      branchMatch = e.branch === parseInt(userBranch);
+    }
     
-    // Month filter
     let monthMatch = true;
     if (monthFilter !== 'all') {
       const expMonth = e.date.substring(0, 7);
@@ -89,6 +109,7 @@ const ExtraExpense = () => {
       return;
     }
 
+    const branch = userBranch ? parseInt(userBranch) : parseInt(newExpense.branch);
     const newId = expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1;
     const date = newExpense.date || getCurrentDate();
 
@@ -96,7 +117,7 @@ const ExtraExpense = () => {
       id: newId,
       description: newExpense.description,
       amount: parseInt(newExpense.amount),
-      branch: parseInt(newExpense.branch),
+      branch: branch,
       date: date,
     }]);
 
@@ -117,7 +138,7 @@ const ExtraExpense = () => {
           ...e,
           description: newExpense.description,
           amount: parseInt(newExpense.amount),
-          branch: parseInt(newExpense.branch),
+          branch: userBranch ? parseInt(userBranch) : parseInt(newExpense.branch),
           date: newExpense.date || e.date,
         };
       }
@@ -139,7 +160,12 @@ const ExtraExpense = () => {
   // ===== OPEN MODALS =====
   const openAddModal = () => {
     setEditingExpense(null);
-    setNewExpense({ description: '', amount: '', branch: 1, date: getCurrentDate() });
+    setNewExpense({ 
+      description: '', 
+      amount: '', 
+      branch: userBranch ? parseInt(userBranch) : 1, 
+      date: getCurrentDate() 
+    });
     setShowModal(true);
   };
 
@@ -170,16 +196,16 @@ const ExtraExpense = () => {
     });
   };
 
-  // ===== GET BRANCH TOTAL =====
+  // ===== GET BRANCH TOTAL (Filtered) =====
   const getBranchTotal = (branch) => {
-    return expenses
+    return filtered
       .filter(e => e.branch === branch)
       .reduce((sum, e) => sum + e.amount, 0);
   };
 
-  // ===== GET MONTH TOTAL =====
+  // ===== GET MONTH TOTAL (Filtered) =====
   const getMonthTotal = (month) => {
-    return expenses
+    return filtered
       .filter(e => {
         const expMonth = e.date.substring(0, 7);
         return expMonth === month;
@@ -189,15 +215,59 @@ const ExtraExpense = () => {
 
   const uniqueMonths = getUniqueMonths();
 
+  // ===== TOTALS (Filtered) =====
+  const totalExpenses = filtered.length;
+  const totalAmount = filtered.reduce((sum, e) => sum + e.amount, 0);
+
+  // ===== BRANCH TOTALS (Filtered) =====
+  const branch1Total = getBranchTotal(1);
+  const branch2Total = getBranchTotal(2);
+
+  const branchLabel = userBranch ? `Branch ${userBranch}` : 'All Branches';
+
   return (
     <div className="extra-expense-container">
       <div className="extra-header">
-        <h3>Extra Expenses</h3>
+        <div className="header-left">
+          <h3>Extra Expenses</h3>
+          <div className="branch-label">
+            <Building size={14} />
+            <span>{branchLabel}</span>
+          </div>
+          <div className="header-stats">
+            <span className="stat-chip">
+              <Building size={14} />
+              {totalExpenses} Expenses
+            </span>
+            <span className="stat-chip">
+              <DollarSign size={14} />
+              PKR {totalAmount.toLocaleString()}
+            </span>
+          </div>
+        </div>
         <button className="btn-accent" onClick={openAddModal}>
           <Plus size={18} />
           Add Expense
         </button>
       </div>
+
+      {/* ===== BRANCH TOTALS CARDS (Only if both branches have data) ===== */}
+      {userRole === 'admin' && !userBranch && (
+        <div className="branch-totals">
+          <div className="branch-total-card branch-1-card">
+            <h4>Branch 1</h4>
+            <div className="branch-total-row">
+              <span>Total: PKR {branch1Total.toLocaleString()}</span>
+            </div>
+          </div>
+          <div className="branch-total-card branch-2-card">
+            <h4>Branch 2</h4>
+            <div className="branch-total-row">
+              <span>Total: PKR {branch2Total.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===== FILTERS ===== */}
       <div className="extra-controls">
@@ -212,30 +282,6 @@ const ExtraExpense = () => {
               setCurrentPage(1);
             }}
           />
-        </div>
-
-        <div className="filter-group">
-          <span className="filter-label">Branch:</span>
-          <div className="branch-filters">
-            <button 
-              className={`filter-btn ${branchFilter === 'all' ? 'active' : ''}`}
-              onClick={() => { setBranchFilter('all'); setCurrentPage(1); }}
-            >
-              All
-            </button>
-            <button 
-              className={`filter-btn branch-1 ${branchFilter === '1' ? 'active' : ''}`}
-              onClick={() => { setBranchFilter('1'); setCurrentPage(1); }}
-            >
-              Branch 1
-            </button>
-            <button 
-              className={`filter-btn branch-2 ${branchFilter === '2' ? 'active' : ''}`}
-              onClick={() => { setBranchFilter('2'); setCurrentPage(1); }}
-            >
-              Branch 2
-            </button>
-          </div>
         </div>
 
         <div className="filter-group">
@@ -263,28 +309,34 @@ const ExtraExpense = () => {
       {/* ===== TOTALS ===== */}
       <div className="totals-container">
         <div className="total-box total-all">
-          <span>Total All Branches</span>
-          <strong>₹{expenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}</strong>
+          <span>Total {branchLabel}</span>
+          <strong>PKR {totalAmount.toLocaleString()}</strong>
         </div>
-        <div className="total-box total-branch-1">
-          <span>🏪 Branch 1</span>
-          <strong>₹{getBranchTotal(1).toLocaleString()}</strong>
-        </div>
-        <div className="total-box total-branch-2">
-          <span>🏪 Branch 2</span>
-          <strong>₹{getBranchTotal(2).toLocaleString()}</strong>
-        </div>
+        {userRole === 'admin' && !userBranch && (
+          <>
+            <div className="total-box total-branch-1">
+              <span>Branch 1</span>
+              <strong>PKR {branch1Total.toLocaleString()}</strong>
+            </div>
+            <div className="total-box total-branch-2">
+              <span>Branch 2</span>
+              <strong>PKR {branch2Total.toLocaleString()}</strong>
+            </div>
+          </>
+        )}
       </div>
 
       {/* ===== MONTHLY TOTALS ===== */}
-      <div className="monthly-totals">
-        {uniqueMonths.map(month => (
-          <div key={month} className="month-total-box">
-            <span>{getMonthName(month)}</span>
-            <strong>₹{getMonthTotal(month).toLocaleString()}</strong>
-          </div>
-        ))}
-      </div>
+      {uniqueMonths.length > 0 && (
+        <div className="monthly-totals">
+          {uniqueMonths.map(month => (
+            <div key={month} className="month-total-box">
+              <span>{getMonthName(month)}</span>
+              <strong>PKR {getMonthTotal(month).toLocaleString()}</strong>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="extra-table-wrap">
         <table className="extra-table">
@@ -293,7 +345,7 @@ const ExtraExpense = () => {
               <th>#</th>
               <th>Description</th>
               <th>Branch</th>
-              <th>Amount (₹)</th>
+              <th>Amount (PKR)</th>
               <th>Date</th>
               <th>Actions</th>
             </tr>
@@ -301,15 +353,15 @@ const ExtraExpense = () => {
           <tbody>
             {currentItems.length === 0 ? (
               <tr>
-                <td colSpan="6" className="no-data">No expenses found</td>
+                <td colSpan="6" className="no-data">No expenses found for {branchLabel}</td>
               </tr>
             ) : (
               currentItems.map((exp, index) => (
                 <tr key={exp.id}>
-                  <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                  <td className="font-medium">{exp.description}</td>
+                  <td className="text-gray">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                  <td className="expense-desc">{exp.description}</td>
                   <td><span className={`branch-badge branch-${exp.branch}`}>Branch {exp.branch}</span></td>
-                  <td>₹{exp.amount.toLocaleString()}</td>
+                  <td className="amount-cell">PKR {exp.amount.toLocaleString()}</td>
                   <td>{formatDate(exp.date)}</td>
                   <td>
                     <div className="action-group">
@@ -357,7 +409,10 @@ const ExtraExpense = () => {
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editingExpense ? 'Edit Extra Expense' : 'Add Extra Expense'}</h3>
+              <div className="modal-header-left">
+                <Filter size={20} className="modal-icon" />
+                <h3>{editingExpense ? 'Edit Extra Expense' : 'Add Extra Expense'}</h3>
+              </div>
               <button className="modal-close" onClick={closeModal}>
                 <X size={24} />
               </button>
@@ -377,7 +432,7 @@ const ExtraExpense = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Amount (₹) *</label>
+                  <label>Amount (PKR) *</label>
                   <input
                     type="number"
                     className="form-input"
@@ -393,10 +448,15 @@ const ExtraExpense = () => {
                     className="form-input"
                     value={newExpense.branch}
                     onChange={(e) => setNewExpense({ ...newExpense, branch: parseInt(e.target.value) })}
+                    disabled={!!userBranch}
+                    style={userBranch ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
                   >
                     <option value={1}>Branch 1</option>
                     <option value={2}>Branch 2</option>
                   </select>
+                  {userBranch && (
+                    <small className="field-hint">Branch locked to {branchLabel}</small>
+                  )}
                 </div>
               </div>
 
